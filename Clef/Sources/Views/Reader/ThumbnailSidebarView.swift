@@ -90,11 +90,14 @@ private struct ThumbnailCell: View {
         let ratio = size.width / size.height
         let thumbWidth: CGFloat = 160
         let thumbHeight = thumbWidth / ratio
+        let thumbSize = CGSize(width: thumbWidth, height: thumbHeight)
 
-        let image = page.thumbnail(
-            of: CGSize(width: thumbWidth, height: thumbHeight),
-            for: .mediaBox
-        )
+        let image = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let img = page.thumbnail(of: thumbSize, for: .mediaBox)
+                continuation.resume(returning: img)
+            }
+        }
 
         if !Task.isCancelled {
             thumbnail = image

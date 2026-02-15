@@ -8,6 +8,8 @@ struct ScoreReaderView: View {
     let score: Score
     @Binding var currentPageIndex: Int
     @Binding var showThumbnails: Bool
+    @Binding var isTwoPageMode: Bool
+    @Binding var hasCoverPage: Bool
     @Binding var columnVisibility: NavigationSplitViewVisibility
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
@@ -19,33 +21,31 @@ struct ScoreReaderView: View {
 
     var body: some View {
         ZStack {
-            PDFKitView(
-                pdfData: score.pdfData,
-                currentPageIndex: $currentPageIndex,
-                totalPages: $totalPages,
-                isDrawingEnabled: isDrawingEnabled,
-                onDrawingChanged: { pageIndex, drawing in
-                    debounceSave(drawing, for: pageIndex)
-                },
-                drawingForPage: { pageIndex in
-                    loadDrawing(for: pageIndex)
-                }
-            )
-
-            if showThumbnails, let document = pdfDocument {
-                HStack(spacing: 0) {
+            HStack(spacing: 0) {
+                if showThumbnails, let document = pdfDocument {
                     ThumbnailSidebarView(
                         document: document,
                         currentPageIndex: $currentPageIndex
                     )
                     .frame(width: 220)
-                    .background(.ultraThinMaterial)
 
                     Divider()
-
-                    Spacer()
                 }
-                .transition(.move(edge: .leading))
+
+                PDFKitView(
+                    pdfData: score.pdfData,
+                    currentPageIndex: $currentPageIndex,
+                    totalPages: $totalPages,
+                    isDrawingEnabled: isDrawingEnabled,
+                    isTwoPageMode: isTwoPageMode,
+                    hasCoverPage: hasCoverPage,
+                    onDrawingChanged: { pageIndex, drawing in
+                        debounceSave(drawing, for: pageIndex)
+                    },
+                    drawingForPage: { pageIndex in
+                        loadDrawing(for: pageIndex)
+                    }
+                )
             }
 
             if isPerformanceMode && showControls {
@@ -139,9 +139,9 @@ struct ScoreReaderView: View {
 
     private var thumbnailToggle: some View {
         Button {
-            withAnimation { showThumbnails.toggle() }
+            showThumbnails.toggle()
         } label: {
-            Image(systemName: showThumbnails ? "rectangle.lefthalf.inset.filled" : "rectangle.lefthalf.inset.filled.arrow.left")
+            Image(systemName: showThumbnails ? "sidebar.squares.left" : "sidebar.squares.leading")
         }
     }
 
@@ -155,6 +155,18 @@ struct ScoreReaderView: View {
 
     private var moreMenu: some View {
         Menu {
+            Toggle(isOn: $isTwoPageMode) {
+                Label("두 쪽 보기", systemImage: "book.pages")
+            }
+
+            if isTwoPageMode {
+                Toggle(isOn: $hasCoverPage) {
+                    Label("표지", systemImage: "text.book.closed")
+                }
+            }
+
+            Divider()
+
             Button {
                 withAnimation { isPerformanceMode = true }
             } label: {

@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var isImporting = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showThumbnails = false
+    @State private var isTwoPageMode = false
+    @State private var hasCoverPage = true
     @State private var currentPageIndex = 0
 
     var body: some View {
@@ -28,6 +30,8 @@ struct ContentView: View {
                     score: score,
                     currentPageIndex: $currentPageIndex,
                     showThumbnails: $showThumbnails,
+                    isTwoPageMode: $isTwoPageMode,
+                    hasCoverPage: $hasCoverPage,
                     columnVisibility: $columnVisibility
                 )
                 .id(score.id)
@@ -55,11 +59,10 @@ struct ContentView: View {
 
     private func handleScoreTap(_ score: Score) {
         if selectedScore == score {
-            withAnimation { showThumbnails.toggle() }
+            showThumbnails.toggle()
         } else {
             selectedScore = score
             currentPageIndex = 0
-            withAnimation { showThumbnails = true }
         }
     }
 

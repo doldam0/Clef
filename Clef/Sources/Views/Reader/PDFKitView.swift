@@ -7,13 +7,16 @@ struct PDFKitView: UIViewRepresentable {
     @Binding var currentPageIndex: Int
     @Binding var totalPages: Int
     let isDrawingEnabled: Bool
+    let isTwoPageMode: Bool
+    let hasCoverPage: Bool
     let onDrawingChanged: (Int, PKDrawing) -> Void
     let drawingForPage: (Int) -> PKDrawing
 
     func makeUIView(context: Context) -> PDFView {
         let pdfView = PDFView()
         pdfView.autoScales = true
-        pdfView.displayMode = .singlePage
+        pdfView.displayMode = isTwoPageMode ? .twoUp : .singlePage
+        pdfView.displaysAsBook = hasCoverPage
         pdfView.displayDirection = .horizontal
         pdfView.usePageViewController(true)
         pdfView.pageShadowsEnabled = false
@@ -37,6 +40,14 @@ struct PDFKitView: UIViewRepresentable {
     }
 
     func updateUIView(_ pdfView: PDFView, context: Context) {
+        let targetMode: PDFDisplayMode = isTwoPageMode ? .twoUp : .singlePage
+        if pdfView.displayMode != targetMode {
+            pdfView.displayMode = targetMode
+        }
+        if pdfView.displaysAsBook != hasCoverPage {
+            pdfView.displaysAsBook = hasCoverPage
+        }
+
         if let document = pdfView.document,
            currentPageIndex < document.pageCount,
            let targetPage = document.page(at: currentPageIndex),
