@@ -16,11 +16,32 @@ struct PDFKitView: UIViewRepresentable {
         let pdfView = PDFView()
         pdfView.autoScales = true
         pdfView.displayMode = isTwoPageMode ? .twoUp : .singlePage
-        pdfView.displaysAsBook = hasCoverPage
         pdfView.displayDirection = .horizontal
-        pdfView.usePageViewController(true)
+        if isTwoPageMode {
+            pdfView.displaysAsBook = hasCoverPage
+        }
         pdfView.pageShadowsEnabled = false
         pdfView.backgroundColor = .secondarySystemBackground
+
+        if isTwoPageMode {
+            pdfView.usePageViewController(false)
+
+            let swipeLeft = UISwipeGestureRecognizer(
+                target: context.coordinator,
+                action: #selector(Coordinator.nextPage)
+            )
+            swipeLeft.direction = .left
+            pdfView.addGestureRecognizer(swipeLeft)
+
+            let swipeRight = UISwipeGestureRecognizer(
+                target: context.coordinator,
+                action: #selector(Coordinator.previousPage)
+            )
+            swipeRight.direction = .right
+            pdfView.addGestureRecognizer(swipeRight)
+        } else {
+            pdfView.usePageViewController(true)
+        }
 
         let overlayCoordinator = context.coordinator.overlayCoordinator
         pdfView.pageOverlayViewProvider = overlayCoordinator
@@ -40,14 +61,6 @@ struct PDFKitView: UIViewRepresentable {
     }
 
     func updateUIView(_ pdfView: PDFView, context: Context) {
-        let targetMode: PDFDisplayMode = isTwoPageMode ? .twoUp : .singlePage
-        if pdfView.displayMode != targetMode {
-            pdfView.displayMode = targetMode
-        }
-        if pdfView.displaysAsBook != hasCoverPage {
-            pdfView.displaysAsBook = hasCoverPage
-        }
-
         if let document = pdfView.document,
            currentPageIndex < document.pageCount,
            let targetPage = document.page(at: currentPageIndex),
@@ -106,6 +119,28 @@ struct PDFKitView: UIViewRepresentable {
             overlayCoordinator.cleanup()
         }
 
+        @objc func nextPage() {
+            guard let pdfView, pdfView.canGoToNextPage else { return }
+            let transition = CATransition()
+            transition.type = .push
+            transition.subtype = .fromRight
+            transition.duration = 0.25
+            transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            pdfView.layer.add(transition, forKey: "pageTransition")
+            pdfView.goToNextPage(nil)
+        }
+
+        @objc func previousPage() {
+            guard let pdfView, pdfView.canGoToPreviousPage else { return }
+            let transition = CATransition()
+            transition.type = .push
+            transition.subtype = .fromLeft
+            transition.duration = 0.25
+            transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            pdfView.layer.add(transition, forKey: "pageTransition")
+            pdfView.goToPreviousPage(nil)
+        }
+
         private func handlePageChange() {
             guard let pdfView,
                   let currentPage = pdfView.currentPage,
@@ -114,8 +149,9 @@ struct PDFKitView: UIViewRepresentable {
 
             let pageIndex = document.index(for: currentPage)
             parent.currentPageIndex = pageIndex
-            overlayCoordinator.preloadDrawings(around: pageIndex, pageCount: document.pageCount)
-            overlayCoordinator.preRenderPages(around: pageIndex, document: document)
+            let isTwoPage = parent.isTwoPageMode
+            overlayCoordinator.preloadDrawings(around: pageIndex, pageCount: document.pageCount, isTwoPageMode: isTwoPage)
+            overlayCoordinator.preRenderPages(around: pageIndex, document: document, isTwoPageMode: isTwoPage)
         }
     }
 }
@@ -215,10 +251,13 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         }
     }
 
-    func preloadDrawings(around pageIndex: Int, pageCount: Int) {
+    func preloadDrawings(around pageIndex: Int, pageCount: Int, isTwoPageMode: Bool) {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            for offset in [1, -1, 2, -2] {
+            let offsets = isTwoPageMode
+                ? [1, -1, 2, -2, 3, -3, 4, -4]
+                : [1, -1, 2, -2]
+            for offset in offsets {
                 let target = pageIndex + offset
                 guard target >= 0, target < pageCount, self.drawingCache[target] == nil else { continue }
                 self.drawingCache[target] = self.drawingForPage(target)
@@ -226,9 +265,12 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         }
     }
 
-    func preRenderPages(around pageIndex: Int, document: PDFDocument) {
+    func preRenderPages(around pageIndex: Int, document: PDFDocument, isTwoPageMode: Bool) {
         var pagesToRender: [(PDFPage, CGSize)] = []
-        for offset in [1, -1, 2, -2] {
+        let offsets = isTwoPageMode
+            ? [1, -1, 2, -2, 3, -3, 4, -4]
+            : [1, -1, 2, -2]
+        for offset in offsets {
             let target = pageIndex + offset
             guard target >= 0, target < document.pageCount,
                   !preRenderedPages.contains(target),

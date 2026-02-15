@@ -12,6 +12,8 @@ final class Score {
     @Relationship(deleteRule: .cascade, inverse: \PageAnnotation.score)
     var pageAnnotations: [PageAnnotation] = []
     var folder: Folder?
+    var isTwoPageMode: Bool = false
+    var hasCoverPage: Bool = true
     var createdAt: Date
     var updatedAt: Date
 

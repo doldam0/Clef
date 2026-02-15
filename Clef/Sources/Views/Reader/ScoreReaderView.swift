@@ -5,11 +5,9 @@ import PencilKit
 
 struct ScoreReaderView: View {
     @Environment(\.modelContext) private var modelContext
-    let score: Score
+    @Bindable var score: Score
     @Binding var currentPageIndex: Int
     @Binding var showThumbnails: Bool
-    @Binding var isTwoPageMode: Bool
-    @Binding var hasCoverPage: Bool
     @Binding var columnVisibility: NavigationSplitViewVisibility
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
@@ -18,39 +16,39 @@ struct ScoreReaderView: View {
     @State private var saveTask: Task<Void, Never>?
     @State private var controlsTimer: Task<Void, Never>?
     @State private var pdfDocument: PDFDocument?
+    @State private var pdfViewID = UUID()
 
     var body: some View {
-        ZStack {
-            HStack(spacing: 0) {
-                if showThumbnails, let document = pdfDocument {
-                    ThumbnailSidebarView(
-                        document: document,
-                        currentPageIndex: $currentPageIndex
-                    )
-                    .frame(width: 220)
-
-                    Divider()
-                }
-
-                PDFKitView(
-                    pdfData: score.pdfData,
-                    currentPageIndex: $currentPageIndex,
-                    totalPages: $totalPages,
-                    isDrawingEnabled: isDrawingEnabled,
-                    isTwoPageMode: isTwoPageMode,
-                    hasCoverPage: hasCoverPage,
-                    onDrawingChanged: { pageIndex, drawing in
-                        debounceSave(drawing, for: pageIndex)
-                    },
-                    drawingForPage: { pageIndex in
-                        loadDrawing(for: pageIndex)
-                    }
+        HStack(spacing: 0) {
+            if showThumbnails, let document = pdfDocument {
+                ThumbnailSidebarView(
+                    document: document,
+                    currentPageIndex: $currentPageIndex
                 )
+                .frame(width: 220)
+
+                Divider()
             }
 
+            PDFKitView(
+                pdfData: score.pdfData,
+                currentPageIndex: $currentPageIndex,
+                totalPages: $totalPages,
+                isDrawingEnabled: isDrawingEnabled,
+                isTwoPageMode: score.isTwoPageMode,
+                hasCoverPage: score.hasCoverPage,
+                onDrawingChanged: { pageIndex, drawing in
+                    debounceSave(drawing, for: pageIndex)
+                },
+                drawingForPage: { pageIndex in
+                    loadDrawing(for: pageIndex)
+                }
+            )
+            .id(pdfViewID)
+        }
+        .overlay {
             if isPerformanceMode && showControls {
                 performanceOverlay
-                    .allowsHitTesting(true)
             }
         }
         .simultaneousGesture(
@@ -80,6 +78,14 @@ struct ScoreReaderView: View {
         }
         .onDisappear {
             flushPendingSave()
+        }
+        .onChange(of: score.isTwoPageMode) {
+            pdfViewID = UUID()
+        }
+        .onChange(of: score.hasCoverPage) {
+            if score.isTwoPageMode {
+                pdfViewID = UUID()
+            }
         }
         .onChange(of: isPerformanceMode) { _, entering in
             if entering {
@@ -155,15 +161,14 @@ struct ScoreReaderView: View {
 
     private var moreMenu: some View {
         Menu {
-            Toggle(isOn: $isTwoPageMode) {
+            Toggle(isOn: $score.isTwoPageMode) {
                 Label("두 쪽 보기", systemImage: "book.pages")
             }
 
-            if isTwoPageMode {
-                Toggle(isOn: $hasCoverPage) {
-                    Label("표지", systemImage: "text.book.closed")
-                }
+            Toggle(isOn: $score.hasCoverPage) {
+                Label("표지", systemImage: "text.book.closed")
             }
+            .disabled(!score.isTwoPageMode)
 
             Divider()
 
