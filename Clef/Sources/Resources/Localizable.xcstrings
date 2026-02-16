@@ -74,6 +74,9 @@
         }
       }
     },
+    "Analyzing Metadata..." : {
+
+    },
     "Apply" : {
       "localizations" : {
         "ko" : {
@@ -185,6 +188,7 @@
       }
     },
     "Detected Metadata" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -665,6 +669,9 @@
           }
         }
       }
+    },
+    "Skip" : {
+
     },
     "Tags" : {
       "localizations" : {

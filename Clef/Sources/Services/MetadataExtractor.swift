@@ -4,7 +4,7 @@ import PDFKit
 @preconcurrency import Vision
 import NaturalLanguage
 
-struct ExtractedMetadata {
+struct ExtractedMetadata: Sendable {
     var title: String?
     var composer: String?
     var instrument: String?
@@ -18,13 +18,49 @@ actor MetadataExtractor {
     func extract(from pdfData: Data) async -> ExtractedMetadata {
         var metadata = ExtractedMetadata()
 
-        if let document = PDFDocument(data: pdfData) {
-            let attrs = document.documentAttributes ?? [:]
-            metadata.title = normalized(attrs[PDFDocumentAttribute.titleAttribute] as? String)
-            metadata.composer = normalized(attrs[PDFDocumentAttribute.authorAttribute] as? String)
-        }
+        let (pdfTitle, pdfAuthor, cgImage) = await Task.detached(priority: .userInitiated) {
+            guard let document = PDFDocument(data: pdfData) else {
+                return (nil as String?, nil as String?, nil as CGImage?)
+            }
 
-        if let ocrResults = await ocrFirstPage(pdfData: pdfData) {
+            let attrs = document.documentAttributes ?? [:]
+            let title = attrs[PDFDocumentAttribute.titleAttribute] as? String
+            let author = attrs[PDFDocumentAttribute.authorAttribute] as? String
+
+            guard let page = document.page(at: 0) else {
+                return (title, author, nil as CGImage?)
+            }
+
+            let pageRect = page.bounds(for: .mediaBox)
+            let scale: CGFloat = (pageRect.width * pageRect.height) > 1_000_000 ? 1.5 : 2.0
+            let width = Int(pageRect.width * scale)
+            let height = Int(pageRect.height * scale)
+
+            guard width > 0, height > 0,
+                  let context = CGContext(
+                      data: nil,
+                      width: width,
+                      height: height,
+                      bitsPerComponent: 8,
+                      bytesPerRow: 0,
+                      space: CGColorSpaceCreateDeviceRGB(),
+                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                  ) else {
+                return (title, author, nil as CGImage?)
+            }
+
+            context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+            context.scaleBy(x: scale, y: scale)
+            page.draw(with: .mediaBox, to: context)
+
+            return (title, author, context.makeImage())
+        }.value
+
+        metadata.title = normalized(pdfTitle)
+        metadata.composer = normalized(pdfAuthor)
+
+        if let cgImage, let ocrResults = await performOCR(on: cgImage) {
             if metadata.title == nil {
                 metadata.title = findTitle(from: ocrResults)
             }
@@ -42,15 +78,8 @@ actor MetadataExtractor {
         return metadata
     }
 
-    private func ocrFirstPage(pdfData: Data) async -> [OCRResult]? {
-        guard let cgImage = await Task.detached(
-            priority: .userInitiated,
-            operation: { renderFirstPageToImage(pdfData: pdfData) }
-        ).value else {
-            return nil
-        }
-
-        return await withCheckedContinuation { continuation in
+    private func performOCR(on cgImage: CGImage) async -> [OCRResult]? {
+        await withCheckedContinuation { continuation in
             let request = VNRecognizeTextRequest { request, _ in
                 guard let observations = request.results as? [VNRecognizedTextObservation] else {
                     continuation.resume(returning: nil)
@@ -237,35 +266,4 @@ private struct OCRResult {
     let confidence: Float
 }
 
-private func renderFirstPageToImage(pdfData: Data, scale: CGFloat = 2.0) -> CGImage? {
-    guard let document = PDFDocument(data: pdfData),
-          let page = document.page(at: 0) else {
-        return nil
-    }
 
-    let pageRect = page.bounds(for: .mediaBox)
-    let width = Int(pageRect.width * scale)
-    let height = Int(pageRect.height * scale)
-
-    guard width > 0,
-          height > 0,
-          let context = CGContext(
-              data: nil,
-              width: width,
-              height: height,
-              bitsPerComponent: 8,
-              bytesPerRow: 0,
-              space: CGColorSpaceCreateDeviceRGB(),
-              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-          ) else {
-        return nil
-    }
-
-    context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-    context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
-
-    context.scaleBy(x: scale, y: scale)
-    page.draw(with: .mediaBox, to: context)
-
-    return context.makeImage()
-}

@@ -4,6 +4,9 @@ import SwiftData
 struct MetadataConfirmationView: View {
     let score: Score
     let extracted: ExtractedMetadata
+    var currentIndex: Int = 0
+    var totalCount: Int = 1
+    var onComplete: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -43,11 +46,15 @@ struct MetadataConfirmationView: View {
                     autoDetectedLabel(show: extracted.timeSignature)
                 }
             }
-            .navigationTitle(String(localized: "Detected Metadata"))
+            .navigationTitle(totalCount > 1
+                ? "\(String(localized: "Score Info")) (\(currentIndex + 1)/\(totalCount))"
+                : String(localized: "Score Info")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "Cancel")) {
+                    Button(String(localized: "Skip")) {
+                        onComplete?()
                         dismiss()
                     }
                 }
@@ -55,6 +62,8 @@ struct MetadataConfirmationView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(String(localized: "Apply")) {
                         applyChanges()
+                        onComplete?()
+                        dismiss()
                     }
                 }
             }
@@ -95,7 +104,6 @@ struct MetadataConfirmationView: View {
         score.updatedAt = .now
 
         try? modelContext.save()
-        dismiss()
     }
 
     private func normalizedOptional(_ value: String) -> String? {

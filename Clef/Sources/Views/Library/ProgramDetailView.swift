@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UniformTypeIdentifiers
 
 struct ProgramDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -55,31 +54,7 @@ struct ProgramDetailView: View {
                 }
             }
         }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.pdf],
-            allowsMultipleSelection: true
-        ) { result in
-            handleImport(result)
-        }
-    }
-
-    private func handleImport(_ result: Result<[URL], Error>) {
-        guard case .success(let urls) = result else { return }
-
-        for url in urls {
-            guard url.startAccessingSecurityScopedResource() else { continue }
-            defer { url.stopAccessingSecurityScopedResource() }
-
-            guard let pdfData = try? Data(contentsOf: url) else { continue }
-
-            let title = url.deletingPathExtension().lastPathComponent
-            let score = Score(title: title, pdfData: pdfData)
-            modelContext.insert(score)
-            program.appendScore(score)
-        }
-
-        try? modelContext.save()
+        .scoreImporter(isPresented: $isImporting, program: program)
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {

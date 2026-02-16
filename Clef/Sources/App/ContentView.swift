@@ -1,14 +1,10 @@
 import SwiftUI
 import SwiftData
-import PDFKit
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Score.updatedAt, order: .reverse) private var scores: [Score]
     @State private var isImporting = false
     @State private var navigationPath = NavigationPath()
-    @State private var importedScoreForMetadata: Score?
-    @State private var extractedMetadata: ExtractedMetadata?
 
     private var allTags: [String] {
         Array(Set(scores.flatMap(\.tags))).sorted()
@@ -54,53 +50,7 @@ struct ContentView: View {
                 }
             }
         }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.pdf],
-            allowsMultipleSelection: true
-        ) { result in
-            handleImport(result)
-        }
-        .sheet(item: $importedScoreForMetadata) { score in
-            if let metadata = extractedMetadata {
-                MetadataConfirmationView(score: score, extracted: metadata)
-            }
-        }
-    }
-
-    private func handleImport(_ result: Result<[URL], Error>) {
-        guard case .success(let urls) = result else { return }
-
-        var lastImportedScore: Score?
-
-        for url in urls {
-            guard url.startAccessingSecurityScopedResource() else { continue }
-            defer { url.stopAccessingSecurityScopedResource() }
-
-            guard let pdfData = try? Data(contentsOf: url) else { continue }
-
-            let title = url.deletingPathExtension().lastPathComponent
-            let score = Score(title: title, pdfData: pdfData)
-            modelContext.insert(score)
-            lastImportedScore = score
-        }
-
-        try? modelContext.save()
-
-        if let score = lastImportedScore {
-            Task {
-                let metadata = await MetadataExtractor.shared.extract(from: score.pdfData)
-                let hasDetectedData = metadata.title != nil
-                    || metadata.composer != nil
-                    || metadata.key != nil
-                    || metadata.timeSignature != nil
-
-                if hasDetectedData {
-                    extractedMetadata = metadata
-                    importedScoreForMetadata = score
-                }
-            }
-        }
+        .scoreImporter(isPresented: $isImporting)
     }
 }
 
