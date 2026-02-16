@@ -13,9 +13,8 @@ struct MetadataConfirmationView: View {
 
     @State private var title: String = ""
     @State private var composer: String = ""
-    @State private var instrument: String = ""
-    @State private var key: String = ""
-    @State private var timeSignature: String = ""
+    @State private var instruments: [String] = []
+    @State private var newInstrumentText: String = ""
     @State private var didPrefill = false
 
     var body: some View {
@@ -31,20 +30,47 @@ struct MetadataConfirmationView: View {
                     autoDetectedLabel(show: extracted.composer)
                 }
 
-                Section(String(localized: "Instrument")) {
-                    TextField(String(localized: "Instrument"), text: $instrument)
-                    autoDetectedLabel(show: extracted.instrument)
+                Section(String(localized: "Instruments")) {
+                    if !instruments.isEmpty {
+                        FlowLayout(spacing: 8) {
+                            ForEach(instruments, id: \.self) { name in
+                                HStack(spacing: 4) {
+                                    Text(name)
+                                        .font(.subheadline)
+                                    Button {
+                                        instruments.removeAll { $0 == name }
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.tint.opacity(0.12), in: Capsule())
+                            }
+                        }
+                    }
+
+                    HStack {
+                        TextField(String(localized: "Add Instrument"), text: $newInstrumentText)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
+                            .onSubmit { addInstrument() }
+
+                        if !newInstrumentText.isEmpty {
+                            Button(action: addInstrument) {
+                                Image(systemName: "plus.circle.fill")
+                            }
+                        }
+                    }
+
+                    if !extracted.instruments.isEmpty {
+                        autoDetectedLabel(show: extracted.instruments.joined(separator: ", "))
+                    }
                 }
 
-                Section(String(localized: "Key")) {
-                    TextField(String(localized: "Key"), text: $key)
-                    autoDetectedLabel(show: extracted.key)
-                }
-
-                Section(String(localized: "Time Signature")) {
-                    TextField(String(localized: "Time Signature"), text: $timeSignature)
-                    autoDetectedLabel(show: extracted.timeSignature)
-                }
             }
             .navigationTitle(totalCount > 1
                 ? "\(String(localized: "Score Info")) (\(currentIndex + 1)/\(totalCount))"
@@ -88,9 +114,17 @@ struct MetadataConfirmationView: View {
 
         title = extracted.title ?? score.title
         composer = extracted.composer ?? score.composer ?? ""
-        instrument = extracted.instrument ?? score.instrument ?? ""
-        key = extracted.key ?? score.key ?? ""
-        timeSignature = extracted.timeSignature ?? score.timeSignature ?? ""
+        instruments = extracted.instruments.isEmpty ? score.instruments : extracted.instruments
+    }
+
+    private func addInstrument() {
+        let trimmed = newInstrumentText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !instruments.contains(trimmed) else {
+            newInstrumentText = ""
+            return
+        }
+        instruments.append(trimmed)
+        newInstrumentText = ""
     }
 
     private func applyChanges() {
@@ -98,9 +132,7 @@ struct MetadataConfirmationView: View {
         score.title = trimmedTitle.isEmpty ? score.title : trimmedTitle
 
         score.composer = normalizedOptional(composer)
-        score.instrument = normalizedOptional(instrument)
-        score.key = normalizedOptional(key)
-        score.timeSignature = normalizedOptional(timeSignature)
+        score.instruments = instruments
         score.updatedAt = .now
 
         try? modelContext.save()

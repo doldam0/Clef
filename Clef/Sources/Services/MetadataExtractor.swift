@@ -4,31 +4,49 @@ import PDFKit
 @preconcurrency import Vision
 import NaturalLanguage
 
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
+
 struct ExtractedMetadata: Sendable {
     var title: String?
     var composer: String?
-    var instrument: String?
-    var key: String?
-    var timeSignature: String?
+    var instruments: [String] = []
 }
+
+#if canImport(FoundationModels)
+@available(iOS 26.0, *)
+@Generable
+struct LLMScoreMetadata {
+    @Guide(description: "The title of the sheet music piece. Extract the full title as written.")
+    var title: String?
+    @Guide(description: "The full name of the composer as written on the score.")
+    var composer: String?
+    @Guide(description: "Instrument names translated to standard English. Only from Medium or Large text. Empty array if none visible.")
+    var instruments: [String]
+}
+#endif
 
 actor MetadataExtractor {
     static let shared = MetadataExtractor()
 
-    func extract(from pdfData: Data) async -> ExtractedMetadata {
-        var metadata = ExtractedMetadata()
+    // MARK: - Main extraction
 
-        let (pdfTitle, pdfAuthor, cgImage) = await Task.detached(priority: .userInitiated) {
+    func extract(from pdfData: Data) async -> ExtractedMetadata {
+        // Step 1: Parse PDF once — attributes + first page render
+        let (pdfTitle, pdfAuthor, pdfSubject, pdfCreator, cgImage) = await Task.detached(priority: .userInitiated) {
             guard let document = PDFDocument(data: pdfData) else {
-                return (nil as String?, nil as String?, nil as CGImage?)
+                return (nil as String?, nil as String?, nil as String?, nil as String?, nil as CGImage?)
             }
 
             let attrs = document.documentAttributes ?? [:]
             let title = attrs[PDFDocumentAttribute.titleAttribute] as? String
             let author = attrs[PDFDocumentAttribute.authorAttribute] as? String
+            let subject = attrs[PDFDocumentAttribute.subjectAttribute] as? String
+            let creator = attrs[PDFDocumentAttribute.creatorAttribute] as? String
 
             guard let page = document.page(at: 0) else {
-                return (title, author, nil as CGImage?)
+                return (title, author, subject, creator, nil as CGImage?)
             }
 
             let pageRect = page.bounds(for: .mediaBox)
@@ -46,7 +64,7 @@ actor MetadataExtractor {
                       space: CGColorSpaceCreateDeviceRGB(),
                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
                   ) else {
-                return (title, author, nil as CGImage?)
+                return (title, author, subject, creator, nil as CGImage?)
             }
 
             context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
@@ -54,29 +72,39 @@ actor MetadataExtractor {
             context.scaleBy(x: scale, y: scale)
             page.draw(with: .mediaBox, to: context)
 
-            return (title, author, context.makeImage())
+            return (title, author, subject, creator, context.makeImage())
         }.value
 
-        metadata.title = normalized(pdfTitle)
-        metadata.composer = normalized(pdfAuthor)
-
-        if let cgImage, let ocrResults = await performOCR(on: cgImage) {
-            if metadata.title == nil {
-                metadata.title = findTitle(from: ocrResults)
-            }
-            if metadata.composer == nil {
-                metadata.composer = findComposer(from: ocrResults)
-            }
-            if metadata.key == nil {
-                metadata.key = findKey(from: ocrResults)
-            }
-            if metadata.timeSignature == nil {
-                metadata.timeSignature = findTimeSignature(from: ocrResults)
-            }
+        // Step 2: OCR on first page
+        var ocrResults: [OCRResult]?
+        if let cgImage {
+            ocrResults = await performOCR(on: cgImage)
         }
 
-        return metadata
+        // Step 3: Try Foundation Models LLM (iPadOS 26+)
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *), let ocrResults {
+            if let result = await extractWithLLM(
+                ocrResults: ocrResults,
+                pdfTitle: pdfTitle,
+                pdfAuthor: pdfAuthor,
+                pdfSubject: pdfSubject,
+                pdfCreator: pdfCreator
+            ) {
+                return result
+            }
+        }
+        #endif
+
+        // Step 4: Fallback — regex-based extraction
+        return extractWithRegex(
+            ocrResults: ocrResults,
+            pdfTitle: pdfTitle,
+            pdfAuthor: pdfAuthor
+        )
     }
+
+    // MARK: - OCR
 
     private func performOCR(on cgImage: CGImage) async -> [OCRResult]? {
         await withCheckedContinuation { continuation in
@@ -109,6 +137,122 @@ actor MetadataExtractor {
                 continuation.resume(returning: nil)
             }
         }
+    }
+
+    // MARK: - LLM-based extraction (iPadOS 26+)
+
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, *)
+    private func extractWithLLM(
+        ocrResults: [OCRResult],
+        pdfTitle: String?,
+        pdfAuthor: String?,
+        pdfSubject: String?,
+        pdfCreator: String?
+    ) async -> ExtractedMetadata? {
+        guard SystemLanguageModel.default.availability == .available else { return nil }
+
+        let ocrText = formatOCRForLLM(ocrResults)
+        let pdfMetadata = formatPDFMetadata(
+            title: pdfTitle,
+            author: pdfAuthor,
+            subject: pdfSubject,
+            creator: pdfCreator
+        )
+
+        let prompt = """
+        PDF File Metadata:
+        \(pdfMetadata)
+
+        OCR Text from first page:
+        \(ocrText)
+        """
+
+        do {
+            let session = LanguageModelSession {
+                """
+                You are a sheet music metadata extractor. Each OCR line has [position, size] tags.
+
+                Extract:
+                - title: The piece name (usually Large text near top center)
+                - composer: The composer's full name (usually Medium or Large text near top right)
+                - instruments: Only from Medium or Large text. Ignore Small text (cue labels). Translate any non-English names to standard English. Most parts have 1-4 instruments.
+
+                Do NOT guess or infer. Only extract what is literally visible. When in doubt, leave empty.
+                """
+            }
+            let response = try await session.respond(to: prompt, generating: LLMScoreMetadata.self)
+            let content = response.content
+            return ExtractedMetadata(
+                title: normalized(content.title),
+                composer: normalized(content.composer),
+                instruments: content.instruments
+            )
+        } catch {
+            return nil
+        }
+    }
+    #endif
+
+    private func formatOCRForLLM(_ results: [OCRResult]) -> String {
+        let sorted = results.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
+        let heights = sorted.map { $0.boundingBox.height }
+        let medianHeight = heights.isEmpty ? 0 : heights.sorted()[heights.count / 2]
+
+        return sorted
+            .prefix(50)
+            .map { result in
+                let vPos = result.boundingBox.midY > 0.66 ? "Top"
+                    : result.boundingBox.midY > 0.33 ? "Middle" : "Bottom"
+                let hPos = result.boundingBox.midX < 0.33 ? "Left"
+                    : result.boundingBox.midX < 0.66 ? "Center" : "Right"
+                let size: String
+                if medianHeight > 0 {
+                    let ratio = result.boundingBox.height / medianHeight
+                    size = ratio > 1.4 ? "Large" : ratio < 0.7 ? "Small" : "Medium"
+                } else {
+                    size = "Medium"
+                }
+                return "[\(vPos), \(hPos), \(size)] \"\(result.text)\""
+            }
+            .joined(separator: "\n")
+    }
+
+    private func formatPDFMetadata(
+        title: String?,
+        author: String?,
+        subject: String?,
+        creator: String?
+    ) -> String {
+        var lines: [String] = []
+        lines.append("Title: \(title ?? "not available")")
+        lines.append("Author: \(author ?? "not available")")
+        if let subject, !subject.isEmpty { lines.append("Subject: \(subject)") }
+        if let creator, !creator.isEmpty { lines.append("Creator App: \(creator)") }
+        return lines.joined(separator: "\n")
+    }
+
+    // MARK: - Regex-based extraction (fallback)
+
+    private func extractWithRegex(
+        ocrResults: [OCRResult]?,
+        pdfTitle: String?,
+        pdfAuthor: String?
+    ) -> ExtractedMetadata {
+        var metadata = ExtractedMetadata()
+        metadata.title = normalized(pdfTitle)
+        metadata.composer = normalized(pdfAuthor)
+
+        if let ocrResults {
+            if metadata.title == nil {
+                metadata.title = findTitle(from: ocrResults)
+            }
+            if metadata.composer == nil {
+                metadata.composer = findComposer(from: ocrResults)
+            }
+        }
+
+        return metadata
     }
 
     private func findTitle(from results: [OCRResult]) -> String? {
@@ -147,36 +291,6 @@ actor MetadataExtractor {
         for result in topRightCandidates.sorted(by: { composerScore($0) > composerScore($1) }) {
             if let match = firstRegexMatch(in: result.text, patterns: composerKeywordPatterns) {
                 return normalized(extractName(from: match) ?? match)
-            }
-        }
-
-        return nil
-    }
-
-    private func findKey(from results: [OCRResult]) -> String? {
-        let patterns = [
-            "\\b([A-G](?:#|b|♯|♭)?)\\s*(Major|major|Minor|minor)\\b",
-            "\\b([A-G](?:#|b|♯|♭)?)\\s*(장조|단조)\\b"
-        ]
-
-        for result in results.sorted(by: { $0.confidence > $1.confidence }) {
-            if let match = firstRegexMatch(in: result.text, patterns: patterns) {
-                return normalized(match)
-            }
-        }
-
-        return nil
-    }
-
-    private func findTimeSignature(from results: [OCRResult]) -> String? {
-        let patterns = [
-            "\\b(2|3|4|5|6|7|9|12)\\s*/\\s*(2|4|8|16)\\b"
-        ]
-
-        for result in results.sorted(by: { $0.confidence > $1.confidence }) {
-            if let match = firstRegexMatch(in: result.text, patterns: patterns) {
-                let normalizedMatch = match.replacingOccurrences(of: " ", with: "")
-                return normalized(normalizedMatch)
             }
         }
 

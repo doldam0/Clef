@@ -8,7 +8,9 @@ struct ScoreMetadataEditorView: View {
     let existingTags: [String]
 
     @State private var newTagText = ""
+    @State private var newInstrumentText = ""
     @FocusState private var isTagFieldFocused: Bool
+    @FocusState private var isInstrumentFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -16,12 +18,24 @@ struct ScoreMetadataEditorView: View {
                 Section("General") {
                     TextField("Title", text: $score.title)
                     TextField("Composer", text: optionalBinding($score.composer))
-                    TextField("Instrument", text: optionalBinding($score.instrument))
                 }
 
-                Section("Music Info") {
-                    TextField("Key (e.g. C Major)", text: optionalBinding($score.key))
-                    TextField("Time Signature (e.g. 4/4)", text: optionalBinding($score.timeSignature))
+                Section("Instruments") {
+                    instrumentChipsView
+
+                    HStack {
+                        TextField("Add Instrument", text: $newInstrumentText)
+                            .focused($isInstrumentFieldFocused)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
+                            .onSubmit { addInstrument() }
+
+                        if !newInstrumentText.isEmpty {
+                            Button(action: addInstrument) {
+                                Image(systemName: "plus.circle.fill")
+                            }
+                        }
+                    }
                 }
 
                 Section("Tags") {
@@ -79,6 +93,31 @@ struct ScoreMetadataEditorView: View {
     }
 
     @ViewBuilder
+    private var instrumentChipsView: some View {
+        if !score.instruments.isEmpty {
+            FlowLayout(spacing: 8) {
+                ForEach(score.instruments, id: \.self) { name in
+                    HStack(spacing: 4) {
+                        Text(name)
+                            .font(.subheadline)
+                        Button {
+                            score.instruments.removeAll { $0 == name }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.tint.opacity(0.12), in: Capsule())
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
     private var tagChipsView: some View {
         if !score.tags.isEmpty {
             FlowLayout(spacing: 8) {
@@ -108,6 +147,17 @@ struct ScoreMetadataEditorView: View {
         let query = newTagText.lowercased()
         return existingTags
             .filter { $0.lowercased().contains(query) && !score.tags.contains($0) }
+    }
+
+    private func addInstrument() {
+        let trimmed = newInstrumentText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !score.instruments.contains(trimmed) else {
+            newInstrumentText = ""
+            return
+        }
+        score.instruments.append(trimmed)
+        newInstrumentText = ""
+        isInstrumentFieldFocused = true
     }
 
     private func addTag() {

@@ -6,9 +6,7 @@ final class Score {
     var id: UUID
     var title: String
     var composer: String?
-    var instrument: String?
-    var key: String?
-    var timeSignature: String?
+    var instruments: [String]
     var tags: [String]
     @Attribute(.externalStorage) var pdfData: Data
     @Relationship(deleteRule: .cascade, inverse: \PageAnnotation.score)
@@ -32,18 +30,14 @@ final class Score {
     init(
         title: String,
         composer: String? = nil,
-        instrument: String? = nil,
-        key: String? = nil,
-        timeSignature: String? = nil,
+        instruments: [String] = [],
         tags: [String] = [],
         pdfData: Data
     ) {
         self.id = UUID()
         self.title = title
         self.composer = composer
-        self.instrument = instrument
-        self.key = key
-        self.timeSignature = timeSignature
+        self.instruments = instruments
         self.tags = tags
         self.pdfData = pdfData
         self.createdAt = .now

@@ -33,6 +33,16 @@
         }
       }
     },
+    "Add Instrument" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악기 추가"
+          }
+        }
+      }
+    },
     "Add Scores" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -75,7 +85,14 @@
       }
     },
     "Analyzing Metadata..." : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메타데이터 분석 중..."
+          }
+        }
+      }
     },
     "Apply" : {
       "localizations" : {
@@ -320,6 +337,17 @@
       }
     },
     "Instrument" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악기"
+          }
+        }
+      }
+    },
+    "Instruments" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -330,6 +358,7 @@
       }
     },
     "Key" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -340,6 +369,7 @@
       }
     },
     "Key (e.g. C Major)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -401,6 +431,7 @@
       }
     },
     "Music Info" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -491,7 +522,14 @@
       }
     },
     "Previous Score" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 악보"
+          }
+        }
+      }
     },
     "Program Name" : {
       "localizations" : {
@@ -671,7 +709,14 @@
       }
     },
     "Skip" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "건너뛰기"
+          }
+        }
+      }
     },
     "Tags" : {
       "localizations" : {
@@ -694,6 +739,7 @@
       }
     },
     "Time Signature" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -704,6 +750,7 @@
       }
     },
     "Time Signature (e.g. 4/4)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
