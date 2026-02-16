@@ -64,9 +64,29 @@ struct FolderDetailView: View {
                     }
 
                     if !folderScores.isEmpty {
-                        sectionView(title: !subFolders.isEmpty || !folderPrograms.isEmpty ? String(localized: "Scores") : nil) {
-                            ForEach(folderScores) { score in
-                                scoreCard(for: score)
+                        if isSelecting {
+                            VStack(alignment: .leading, spacing: 12) {
+                                if !subFolders.isEmpty || !folderPrograms.isEmpty {
+                                    Text(String(localized: "Scores"))
+                                        .font(.title3.bold())
+                                        .padding(.horizontal, 16)
+                                }
+
+                                SelectableCollectionView(
+                                    scores: folderScores,
+                                    selectedIds: $selectedScoreIds,
+                                    isSelecting: $isSelecting,
+                                    isScrollEnabled: false,
+                                    onScoreTapped: onScoreTapped,
+                                    contextMenuProvider: nil
+                                )
+                                .frame(maxWidth: .infinity)
+                            }
+                        } else {
+                            sectionView(title: !subFolders.isEmpty || !folderPrograms.isEmpty ? String(localized: "Scores") : nil) {
+                                ForEach(folderScores) { score in
+                                    scoreCard(for: score)
+                                }
                             }
                         }
                     }
