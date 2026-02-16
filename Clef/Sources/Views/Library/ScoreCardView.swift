@@ -75,5 +75,7 @@ struct ScoreCardView: View {
             .font(.caption2)
             .foregroundStyle(.tertiary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 52, alignment: .top)
     }
 }
