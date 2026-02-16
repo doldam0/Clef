@@ -9,6 +9,7 @@ struct ScoreReaderView: View {
     @Binding var currentPageIndex: Int
     @Binding var showThumbnails: Bool
     @Binding var columnVisibility: NavigationSplitViewVisibility
+    let allTags: [String]
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
     @State private var isPerformanceMode = false
@@ -17,6 +18,7 @@ struct ScoreReaderView: View {
     @State private var controlsTimer: Task<Void, Never>?
     @State private var pdfDocument: PDFDocument?
     @State private var pdfViewID = UUID()
+    @State private var showMetadataEditor = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -78,6 +80,9 @@ struct ScoreReaderView: View {
         }
         .onDisappear {
             flushPendingSave()
+        }
+        .sheet(isPresented: $showMetadataEditor) {
+            ScoreMetadataEditorView(score: score, existingTags: allTags)
         }
         .onChange(of: score.isTwoPageMode) {
             pdfViewID = UUID()
@@ -171,6 +176,12 @@ struct ScoreReaderView: View {
             .disabled(!score.isTwoPageMode)
 
             Divider()
+
+            Button {
+                showMetadataEditor = true
+            } label: {
+                Label("악보 정보", systemImage: "info.circle")
+            }
 
             Button {
                 withAnimation { isPerformanceMode = true }

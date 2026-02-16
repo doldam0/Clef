@@ -11,6 +11,11 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showThumbnails = false
     @State private var currentPageIndex = 0
+    @State private var selectedTags: Set<String> = []
+
+    private var allTags: [String] {
+        Array(Set(scores.flatMap(\.tags))).sorted()
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -18,6 +23,8 @@ struct ContentView: View {
                 scores: scores,
                 folders: folders,
                 selectedScore: selectedScore,
+                allTags: allTags,
+                selectedTags: $selectedTags,
                 onImport: { isImporting = true },
                 onDelete: deleteScores,
                 onScoreTapped: handleScoreTap
@@ -28,7 +35,8 @@ struct ContentView: View {
                     score: score,
                     currentPageIndex: $currentPageIndex,
                     showThumbnails: $showThumbnails,
-                    columnVisibility: $columnVisibility
+                    columnVisibility: $columnVisibility,
+                    allTags: allTags
                 )
                 .id(score.id)
             } else {
