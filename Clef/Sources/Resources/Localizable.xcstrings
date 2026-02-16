@@ -1,13 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    " " : {
+
+    },
     "%lld" : {
 
     },
     "%lld / %lld" : {
 
     },
-    "+%lld" : {
+    "%lld." : {
 
     },
     "Add" : {
@@ -20,12 +23,92 @@
         }
       }
     },
+    "Add at least one score to play this program." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 프로그램을 재생하려면 악보를 추가하세요."
+          }
+        }
+      }
+    },
+    "Add Scores" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 추가"
+          }
+        }
+      }
+    },
+    "Add scores to this program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 프로그램에 악보를 추가하세요"
+          }
+        }
+      }
+    },
     "Add Tag" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "태그 추가"
+          }
+        }
+      }
+    },
+    "Add to Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램에 추가"
+          }
+        }
+      }
+    },
+    "Apply" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "적용"
+          }
+        }
+      }
+    },
+    "Are you sure you want to delete \"%@\"? This cannot be undone." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+          }
+        }
+      }
+    },
+    "Auto-detected" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 감지됨"
+          }
+        }
+      }
+    },
+    "Browse" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "둘러보기"
           }
         }
       }
@@ -90,6 +173,26 @@
         }
       }
     },
+    "Delete Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 삭제"
+          }
+        }
+      }
+    },
+    "Detected Metadata" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "감지된 메타데이터"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "ko" : {
@@ -106,6 +209,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "정보 편집"
+          }
+        }
+      }
+    },
+    "Empty Folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "빈 폴더"
+          }
+        }
+      }
+    },
+    "End of Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램 끝"
+          }
+        }
+      }
+    },
+    "Favorite" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즐겨찾기"
           }
         }
       }
@@ -140,6 +273,16 @@
         }
       }
     },
+    "Import PDF sheet music to get started" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF 악보를 가져와서 시작하세요"
+          }
+        }
+      }
+    },
     "Import Score" : {
       "localizations" : {
         "ko" : {
@@ -150,12 +293,42 @@
         }
       }
     },
+    "Import scores and move them to this folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보를 가져와서 이 폴더로 이동하세요"
+          }
+        }
+      }
+    },
+    "In Progress" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연습 중"
+          }
+        }
+      }
+    },
     "Instrument" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "악기"
+          }
+        }
+      }
+    },
+    "Key" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조성"
           }
         }
       }
@@ -180,6 +353,26 @@
         }
       }
     },
+    "Mastered" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완성"
+          }
+        }
+      }
+    },
+    "Missing Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "없는 악보"
+          }
+        }
+      }
+    },
     "Move to Folder" : {
       "localizations" : {
         "ko" : {
@@ -191,6 +384,7 @@
       }
     },
     "Move to Uncategorized" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -220,12 +414,122 @@
         }
       }
     },
+    "New Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 프로그램"
+          }
+        }
+      }
+    },
+    "Next Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 악보"
+          }
+        }
+      }
+    },
+    "No Scores" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 없음"
+          }
+        }
+      }
+    },
+    "No Scores in Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램에 악보 없음"
+          }
+        }
+      }
+    },
+    "Not Started" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작 전"
+          }
+        }
+      }
+    },
     "Performance Mode" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "공연 모드"
+          }
+        }
+      }
+    },
+    "Play" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생"
+          }
+        }
+      }
+    },
+    "Program Name" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램 이름"
+          }
+        }
+      }
+    },
+    "Program Not Found" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램을 찾을 수 없음"
+          }
+        }
+      }
+    },
+    "Programs" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램"
+          }
+        }
+      }
+    },
+    "Recent" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 항목"
+          }
+        }
+      }
+    },
+    "Remove from Folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더에서 제거"
           }
         }
       }
@@ -241,6 +545,7 @@
       }
     },
     "Rename Folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -250,12 +555,33 @@
         }
       }
     },
+    "Rename Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램 이름 변경"
+          }
+        }
+      }
+    },
     "Rename Score" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "악보 이름 변경"
+          }
+        }
+      }
+    },
+    "Replay" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 재생"
           }
         }
       }
@@ -271,6 +597,7 @@
       }
     },
     "Score Name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -286,6 +613,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "악보"
+          }
+        }
+      }
+    },
+    "Search scores" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 검색"
+          }
+        }
+      }
+    },
+    "Search Scores" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 검색"
           }
         }
       }
@@ -322,6 +669,26 @@
         }
       }
     },
+    "This score is unavailable" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 악보를 사용할 수 없습니다"
+          }
+        }
+      }
+    },
+    "Time Signature" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "박자"
+          }
+        }
+      }
+    },
     "Time Signature (e.g. 4/4)" : {
       "localizations" : {
         "ko" : {
@@ -342,6 +709,16 @@
         }
       }
     },
+    "Try a different search" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다른 검색어를 시도하세요"
+          }
+        }
+      }
+    },
     "Two-Page View" : {
       "localizations" : {
         "ko" : {
@@ -358,6 +735,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "미분류"
+          }
+        }
+      }
+    },
+    "Unfavorite" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즐겨찾기 해제"
+          }
+        }
+      }
+    },
+    "You reached the end of %@." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@의 끝에 도달했습니다."
           }
         }
       }

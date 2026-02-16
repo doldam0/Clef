@@ -14,10 +14,20 @@ final class Score {
     @Relationship(deleteRule: .cascade, inverse: \PageAnnotation.score)
     var pageAnnotations: [PageAnnotation] = []
     var folder: Folder?
+    @Relationship(deleteRule: .cascade, inverse: \ProgramItem.score)
+    var programItems: [ProgramItem] = []
     var isTwoPageMode: Bool = false
     var hasCoverPage: Bool = true
+    var isFavorite: Bool = false
+    var practiceStatusRaw: Int = 0
+    var lastPlayedAt: Date?
     var createdAt: Date
     var updatedAt: Date
+
+    var practiceStatus: PracticeStatus {
+        get { PracticeStatus(rawValue: practiceStatusRaw) ?? .notStarted }
+        set { practiceStatusRaw = newValue.rawValue }
+    }
 
     init(
         title: String,

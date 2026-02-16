@@ -7,7 +7,7 @@ struct ClefApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [Score.self, PageAnnotation.self, Folder.self])
+        .modelContainer(for: [Score.self, PageAnnotation.self, Folder.self, Program.self, ProgramItem.self])
         .windowResizability(.contentMinSize)
     }
 }

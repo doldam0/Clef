@@ -8,6 +8,7 @@ struct ScoreReaderView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var score: Score
     let allTags: [String]
+    var onReachedEnd: (() -> Void)? = nil
     @State private var currentPageIndex = 0
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
@@ -68,6 +69,11 @@ struct ScoreReaderView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         drawingToggle
                     }
+                    if onReachedEnd != nil && totalPages > 0 && currentPageIndex == totalPages - 1 {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            nextScoreButton
+                        }
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         moreMenu
                     }
@@ -107,6 +113,8 @@ struct ScoreReaderView: View {
         .ignoresSafeArea(isPerformanceMode ? .all : .container, edges: .bottom)
         .onAppear {
             pdfDocument = PDFDocument(data: score.pdfData)
+            score.lastPlayedAt = .now
+            try? modelContext.save()
         }
         .onDisappear {
             flushPendingSave()
@@ -182,6 +190,14 @@ struct ScoreReaderView: View {
             isDrawingEnabled.toggle()
         } label: {
             Image(systemName: isDrawingEnabled ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
+        }
+    }
+
+    private var nextScoreButton: some View {
+        Button {
+            onReachedEnd?()
+        } label: {
+            Label("Next Score", systemImage: "forward.end")
         }
     }
 
