@@ -8,7 +8,9 @@ struct ScoreReaderView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var score: Score
     let allTags: [String]
-    var onReachedEnd: (() -> Void)? = nil
+    var onSwipePastEnd: (() -> Void)? = nil
+    var onNextScore: (() -> Void)? = nil
+    var onPreviousScore: (() -> Void)? = nil
     @State private var currentPageIndex = 0
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
@@ -43,7 +45,8 @@ struct ScoreReaderView: View {
                 },
                 drawingForPage: { pageIndex in
                     loadDrawing(for: pageIndex)
-                }
+                },
+                onSwipePastEnd: onSwipePastEnd
             )
             .id(pdfViewID)
             .toolbarRole(.editor)
@@ -69,9 +72,22 @@ struct ScoreReaderView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         drawingToggle
                     }
-                    if onReachedEnd != nil && totalPages > 0 && currentPageIndex == totalPages - 1 {
+                    if let onPreviousScore {
                         ToolbarItem(placement: .topBarTrailing) {
-                            nextScoreButton
+                            Button {
+                                onPreviousScore()
+                            } label: {
+                                Label("Previous Score", systemImage: "backward.end")
+                            }
+                        }
+                    }
+                    if let onNextScore {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                onNextScore()
+                            } label: {
+                                Label("Next Score", systemImage: "forward.end")
+                            }
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
@@ -190,14 +206,6 @@ struct ScoreReaderView: View {
             isDrawingEnabled.toggle()
         } label: {
             Image(systemName: isDrawingEnabled ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
-        }
-    }
-
-    private var nextScoreButton: some View {
-        Button {
-            onReachedEnd?()
-        } label: {
-            Label("Next Score", systemImage: "forward.end")
         }
     }
 

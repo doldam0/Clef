@@ -9,26 +9,11 @@ struct ProgramPlayerView: View {
     let allTags: [String]
 
     @State private var currentScore: Score?
-    @State private var showingEndAlert = false
 
     var body: some View {
         Group {
             if let score = currentScore {
-                ScoreReaderView(score: score, allTags: allTags, onReachedEnd: advanceToNext)
-                    .id(score.id)
-                    .overlay(alignment: .topTrailing) {
-                        if let positionText {
-                            Text(positionText)
-                                .font(.caption)
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.ultraThinMaterial, in: Capsule())
-                                .padding(.top, 12)
-                                .padding(.trailing, 12)
-                        }
-                    }
+                scoreReaderView(for: score)
             } else {
                 ContentUnavailableView(
                     "No Scores in Program",
@@ -44,40 +29,54 @@ struct ProgramPlayerView: View {
                 currentScore = program.orderedScores.first
             }
         }
-        .alert("End of Program", isPresented: $showingEndAlert) {
-            Button("Replay") {
-                currentScore = program.orderedScores.first
-            }
-            Button("Close", role: .cancel) {
-                dismiss()
-            }
-        } message: {
-            Text("You reached the end of \(program.name).")
-        }
+    }
+
+    private func scoreReaderView(for score: Score) -> some View {
+        let nextAction: (() -> Void)? = hasNext ? { advanceToNext() } : nil
+        let prevAction: (() -> Void)? = hasPrevious ? { goToPrevious() } : nil
+        let swipeAction: (() -> Void)? = hasNext ? { advanceToNext() } : nil
+
+        return ScoreReaderView(
+            score: score,
+            allTags: allTags,
+            onSwipePastEnd: swipeAction,
+            onNextScore: nextAction,
+            onPreviousScore: prevAction
+        )
+        .id(score.id)
     }
 
     private var orderedScores: [Score] {
         program.orderedScores
     }
 
-    private var positionText: String? {
-        guard let currentScore,
-              let index = orderedScores.firstIndex(where: { $0.id == currentScore.id }) else {
-            return nil
-        }
-        return "\(index + 1) of \(orderedScores.count)"
+    private var currentIndex: Int? {
+        guard let currentScore else { return nil }
+        return orderedScores.firstIndex(where: { $0.id == currentScore.id })
+    }
+
+    private var hasNext: Bool {
+        guard let currentIndex else { return false }
+        return currentIndex + 1 < orderedScores.count
+    }
+
+    private var hasPrevious: Bool {
+        guard let currentIndex else { return false }
+        return currentIndex > 0
     }
 
     private func advanceToNext() {
-        guard let currentScore else { return }
-
-        if let nextScore = program.nextScore(after: currentScore) {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                self.currentScore = nextScore
-            }
-            return
+        guard let currentScore,
+              let nextScore = program.nextScore(after: currentScore) else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            self.currentScore = nextScore
         }
+    }
 
-        showingEndAlert = true
+    private func goToPrevious() {
+        guard let currentIndex, currentIndex > 0 else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            currentScore = orderedScores[currentIndex - 1]
+        }
     }
 }

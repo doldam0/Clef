@@ -11,6 +11,7 @@ struct PDFKitView: UIViewRepresentable {
     let hasCoverPage: Bool
     let onDrawingChanged: (Int, PKDrawing) -> Void
     let drawingForPage: (Int) -> PKDrawing
+    var onSwipePastEnd: (() -> Void)? = nil
 
     func makeUIView(context: Context) -> PDFView {
         let pdfView = PDFView()
@@ -41,6 +42,15 @@ struct PDFKitView: UIViewRepresentable {
             pdfView.addGestureRecognizer(swipeRight)
         } else {
             pdfView.usePageViewController(true)
+
+            if onSwipePastEnd != nil {
+                let swipeLeft = UISwipeGestureRecognizer(
+                    target: context.coordinator,
+                    action: #selector(Coordinator.handleSwipePastEnd)
+                )
+                swipeLeft.direction = .left
+                pdfView.addGestureRecognizer(swipeLeft)
+            }
         }
 
         let overlayCoordinator = context.coordinator.overlayCoordinator
@@ -119,6 +129,16 @@ struct PDFKitView: UIViewRepresentable {
                 NotificationCenter.default.removeObserver(observer)
             }
             overlayCoordinator.cleanup()
+        }
+
+        @objc func handleSwipePastEnd() {
+            guard let pdfView,
+                  let document = pdfView.document,
+                  let currentPage = pdfView.currentPage else { return }
+            let pageIndex = document.index(for: currentPage)
+            if pageIndex >= document.pageCount - 1 {
+                parent.onSwipePastEnd?()
+            }
         }
 
         @objc func nextPage() {
