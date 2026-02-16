@@ -75,6 +75,12 @@ struct ScorePickerView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                        if !score.instruments.isEmpty {
+                            Text(score.instruments.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
                     }
 
                     Spacer(minLength: 8)

@@ -238,10 +238,17 @@ private struct ProgramScoreRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
-                    Text(score.composer ?? "Unknown Composer")
+                    Text(score.composer ?? String(localized: "Unknown Composer"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+
+                    if !score.instruments.isEmpty {
+                        Text(score.instruments.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
                 }
             } else {
                 RoundedRectangle(cornerRadius: 8)

@@ -79,12 +79,12 @@ struct ScoreCardView: View {
                     .lineLimit(1)
             }
 
-            HStack(spacing: 4) {
-                Image(systemName: score.practiceStatus.systemImage)
-                Text(score.practiceStatus.label)
+            if !score.instruments.isEmpty {
+                Text(score.instruments.joined(separator: ", "))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 52, alignment: .top)
