@@ -7,7 +7,7 @@ struct ProgramDetailView: View {
     var onScoreTapped: (Score) -> Void
     var onPlayProgram: (Program) -> Void
 
-    @State private var isImporting = false
+    @State private var showScorePicker = false
     @State private var isSelecting = false
     @State private var selectedItemIds: Set<UUID> = []
     @State private var showDeleteSelectedAlert = false
@@ -35,7 +35,9 @@ struct ProgramDetailView: View {
         } message: {
             Text("Delete \(selectedItemIds.count) scores permanently? This cannot be undone.")
         }
-        .scoreImporter(isPresented: $isImporting, program: program)
+        .sheet(isPresented: $showScorePicker) {
+            ScorePickerView(program: program)
+        }
     }
 
     private var emptyView: some View {
@@ -44,8 +46,8 @@ struct ProgramDetailView: View {
         } description: {
             Text("Add scores to this program")
         } actions: {
-            Button(String(localized: "Import Score")) {
-                isImporting = true
+            Button(String(localized: "Add Scores")) {
+                showScorePicker = true
             }
         }
     }
@@ -140,9 +142,9 @@ struct ProgramDetailView: View {
                 .disabled(selectedItemIds.isEmpty)
             } else {
                 Button {
-                    isImporting = true
+                    showScorePicker = true
                 } label: {
-                    Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
+                    Label(String(localized: "Add Scores"), systemImage: "plus")
                 }
             }
         }

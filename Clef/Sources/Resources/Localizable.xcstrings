@@ -44,7 +44,6 @@
       }
     },
     "Add Scores" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -342,6 +341,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PDF 악보를 가져와서 시작하세요"
+          }
+        }
+      }
+    },
+    "Import scores to your library first" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 라이브러리에 악보를 가져오세요"
           }
         }
       }
@@ -898,6 +907,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "미분류"
+          }
+        }
+      }
+    },
+    "Unknown Composer" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알 수 없는 작곡가"
           }
         }
       }
