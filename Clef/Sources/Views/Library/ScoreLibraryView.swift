@@ -268,43 +268,33 @@ struct ScoreLibraryView: View {
     }
 
     private var searchResultsGrid: some View {
-        Group {
+        ScrollView {
             if searchResults.isEmpty {
                 ContentUnavailableView.search(text: searchText)
                     .padding(.top, 60)
-            } else if isSelecting {
-                selectableScoreGrid(scores: searchResults)
-                    .frame(maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(searchResults) { score in
-                            scoreCard(for: score)
-                        }
+                LazyVGrid(columns: gridColumns, spacing: 16) {
+                    ForEach(searchResults) { score in
+                        scoreCard(for: score)
                     }
-                    .padding(16)
                 }
+                .padding(16)
             }
         }
     }
 
     private var recentTab: some View {
-        Group {
+        ScrollView {
             if allScores.isEmpty {
                 emptyLibraryView
                     .padding(.top, 60)
-            } else if isSelecting {
-                selectableScoreGrid(scores: allScores)
-                    .frame(maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(allScores) { score in
-                            scoreCard(for: score)
-                        }
+                LazyVGrid(columns: gridColumns, spacing: 16) {
+                    ForEach(allScores) { score in
+                        scoreCard(for: score)
                     }
-                    .padding(16)
                 }
+                .padding(16)
             }
         }
     }
@@ -362,16 +352,12 @@ struct ScoreLibraryView: View {
                             .font(.title3.bold())
                             .padding(.horizontal, 16)
 
-                        if isSelecting {
-                            selectableScoreGrid(scores: unfolderedScores, isScrollEnabled: false)
-                        } else {
-                            LazyVGrid(columns: gridColumns, spacing: 16) {
-                                ForEach(unfolderedScores) { score in
-                                    scoreCard(for: score)
-                                }
+                        LazyVGrid(columns: gridColumns, spacing: 16) {
+                            ForEach(unfolderedScores) { score in
+                                scoreCard(for: score)
                             }
-                            .padding(.horizontal, 16)
                         }
+                        .padding(.horizontal, 16)
                     }
                 }
 
@@ -465,18 +451,6 @@ struct ScoreLibraryView: View {
                 Label(String(localized: "Delete"), systemImage: "trash")
             }
         })
-    }
-
-    private func selectableScoreGrid(scores: [Score], isScrollEnabled: Bool = true) -> some View {
-        SelectableCollectionView(
-            scores: scores,
-            selectedIds: $selectedScoreIds,
-            isSelecting: $isSelecting,
-            isScrollEnabled: isScrollEnabled,
-            onScoreTapped: onScoreTapped,
-            contextMenuProvider: nil
-        )
-        .frame(maxWidth: .infinity)
     }
 
     private func folderCard(for folder: Folder) -> some View {
