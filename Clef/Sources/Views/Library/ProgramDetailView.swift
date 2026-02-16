@@ -148,6 +148,11 @@ struct ProgramDetailView: View {
                 }
             }
         }
+        if !program.items.isEmpty && !isSelecting {
+            if #available(iOS 26, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+        }
         ToolbarItem(placement: .topBarTrailing) {
             if !program.items.isEmpty {
                 if isSelecting {
@@ -166,8 +171,7 @@ struct ProgramDetailView: View {
                     Button {
                         withAnimation { isSelecting = true }
                     } label: {
-                        Image(systemName: "checkmark.circle")
-                            .font(.title2)
+                        Text(String(localized: "Select"))
                     }
                 }
             }

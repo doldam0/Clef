@@ -4,6 +4,7 @@ import SwiftData
 struct FolderDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Folder.name) private var allFolders: [Folder]
+    @Query(sort: \Program.updatedAt, order: .reverse) private var allPrograms: [Program]
     let folder: Folder
     var onScoreTapped: (Score) -> Void
     var onProgramTapped: (Program) -> Void
@@ -88,8 +89,8 @@ struct FolderDetailView: View {
                     }
                 }
             }
-            ToolbarItemGroup(placement: .primaryAction) {
-                if isSelecting {
+            if isSelecting {
+                ToolbarItemGroup(placement: .primaryAction) {
                     if !allFolders.isEmpty {
                         Menu {
                             ForEach(allFolders) { targetFolder in
@@ -105,6 +106,19 @@ struct FolderDetailView: View {
                             }
                         } label: {
                             Label(String(localized: "Move"), systemImage: "folder")
+                        }
+                        .disabled(selectedScoreIds.isEmpty)
+                    }
+
+                    if !allPrograms.isEmpty {
+                        Menu {
+                            ForEach(allPrograms) { program in
+                                Button(program.name) {
+                                    addSelectedScores(to: program)
+                                }
+                            }
+                        } label: {
+                            Label(String(localized: "Add to Program"), systemImage: "music.note.list")
                         }
                         .disabled(selectedScoreIds.isEmpty)
                     }
@@ -127,13 +141,14 @@ struct FolderDetailView: View {
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(.white, .tint)
                     }
-                } else {
-                    if !folderScores.isEmpty {
+                }
+            } else {
+                if !folderScores.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
                         Button {
                             withAnimation { isSelecting = true }
                         } label: {
-                            Image(systemName: "checkmark.circle")
-                                .font(.title2)
+                            Text(String(localized: "Select"))
                         }
                     }
                 }
@@ -289,6 +304,19 @@ struct FolderDetailView: View {
                 }
             }
 
+            if !allPrograms.isEmpty {
+                Menu {
+                    ForEach(allPrograms) { program in
+                        Button(program.name) {
+                            program.appendScore(score)
+                            try? modelContext.save()
+                        }
+                    }
+                } label: {
+                    Label(String(localized: "Add to Program"), systemImage: "music.note.list")
+                }
+            }
+
             Divider()
 
             Button(role: .destructive) {
@@ -335,5 +363,13 @@ struct FolderDetailView: View {
         modelContext.delete(score)
         try? modelContext.save()
         deletingScore = nil
+    }
+
+    private func addSelectedScores(to program: Program) {
+        for score in folderScores where selectedScoreIds.contains(score.id) {
+            program.appendScore(score)
+        }
+        try? modelContext.save()
+        selectedScoreIds.removeAll()
     }
 }

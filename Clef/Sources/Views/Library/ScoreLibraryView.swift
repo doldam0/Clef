@@ -107,8 +107,8 @@ struct ScoreLibraryView: View {
                     }
                 }
             }
-            ToolbarItemGroup(placement: .primaryAction) {
-                if isSelecting {
+            if isSelecting {
+                ToolbarItemGroup(placement: .primaryAction) {
                     if !folders.isEmpty {
                         Menu {
                             ForEach(folders) { folder in
@@ -122,6 +122,19 @@ struct ScoreLibraryView: View {
                             }
                         } label: {
                             Label(String(localized: "Move"), systemImage: "folder")
+                        }
+                        .disabled(selectedScoreIds.isEmpty)
+                    }
+
+                    if !programs.isEmpty {
+                        Menu {
+                            ForEach(programs) { program in
+                                Button(program.name) {
+                                    addSelectedScores(to: program)
+                                }
+                            }
+                        } label: {
+                            Label(String(localized: "Add to Program"), systemImage: "music.note.list")
                         }
                         .disabled(selectedScoreIds.isEmpty)
                     }
@@ -144,7 +157,9 @@ struct ScoreLibraryView: View {
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(.white, .tint)
                     }
-                } else {
+                }
+            } else {
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button(action: onImport) {
                             Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
@@ -158,13 +173,18 @@ struct ScoreLibraryView: View {
                     } label: {
                         Label(String(localized: "Add"), systemImage: "plus")
                     }
+                }
 
-                    if !allScores.isEmpty {
+                if !allScores.isEmpty {
+                    if #available(iOS 26, *) {
+                        ToolbarSpacer(.fixed, placement: .primaryAction)
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
                         Button {
                             withAnimation { isSelecting = true }
                         } label: {
-                            Image(systemName: "checkmark.circle")
-                                .font(.title2)
+                            Text(String(localized: "Select"))
                         }
                     }
                 }
@@ -710,6 +730,14 @@ struct ScoreLibraryView: View {
     private func deleteSelectedScores() {
         for score in allScores where selectedScoreIds.contains(score.id) {
             modelContext.delete(score)
+        }
+        try? modelContext.save()
+        selectedScoreIds.removeAll()
+    }
+
+    private func addSelectedScores(to program: Program) {
+        for score in allScores where selectedScoreIds.contains(score.id) {
+            program.appendScore(score)
         }
         try? modelContext.save()
         selectedScoreIds.removeAll()
