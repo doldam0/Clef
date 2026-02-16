@@ -19,6 +19,9 @@ struct ContentView: View {
                 },
                 onProgramTapped: { program in
                     navigationPath.append(ProgramNavigation.detail(program.id))
+                },
+                onFolderTapped: { folder in
+                    navigationPath.append(FolderNavigation.detail(folder.id))
                 }
             )
             .navigationDestination(for: ScoreNavigation.self) { nav in
@@ -27,6 +30,23 @@ struct ContentView: View {
                     if let score = scores.first(where: { $0.id == scoreId }) {
                         ScoreReaderView(score: score, allTags: allTags)
                     }
+                }
+            }
+            .navigationDestination(for: FolderNavigation.self) { nav in
+                switch nav {
+                case .detail(let folderId):
+                    FolderDestinationView(
+                        folderId: folderId,
+                        onScoreTapped: { score in
+                            navigationPath.append(ScoreNavigation.reader(score.id))
+                        },
+                        onProgramTapped: { program in
+                            navigationPath.append(ProgramNavigation.detail(program.id))
+                        },
+                        onFolderTapped: { folder in
+                            navigationPath.append(FolderNavigation.detail(folder.id))
+                        }
+                    )
                 }
             }
             .navigationDestination(for: ProgramNavigation.self) { nav in
@@ -60,6 +80,10 @@ enum ScoreNavigation: Hashable {
     case reader(UUID)
 }
 
+enum FolderNavigation: Hashable {
+    case detail(UUID)
+}
+
 enum ProgramNavigation: Hashable {
     case detail(UUID)
     case play(UUID)
@@ -84,6 +108,30 @@ private struct ProgramDestinationView: View {
         } else {
             ContentUnavailableView(
                 "Program Not Found",
+                systemImage: "exclamationmark.triangle"
+            )
+        }
+    }
+}
+
+private struct FolderDestinationView: View {
+    @Query(sort: \Folder.name) private var folders: [Folder]
+    let folderId: UUID
+    let onScoreTapped: (Score) -> Void
+    let onProgramTapped: (Program) -> Void
+    let onFolderTapped: (Folder) -> Void
+
+    var body: some View {
+        if let folder = folders.first(where: { $0.id == folderId }) {
+            FolderDetailView(
+                folder: folder,
+                onScoreTapped: onScoreTapped,
+                onProgramTapped: onProgramTapped,
+                onFolderTapped: onFolderTapped
+            )
+        } else {
+            ContentUnavailableView(
+                "Folder Not Found",
                 systemImage: "exclamationmark.triangle"
             )
         }

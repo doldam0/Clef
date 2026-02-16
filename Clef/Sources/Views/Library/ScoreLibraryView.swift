@@ -30,10 +30,10 @@ struct ScoreLibraryView: View {
     var onImport: () -> Void
     var onScoreTapped: (Score) -> Void
     var onProgramTapped: (Program) -> Void
+    var onFolderTapped: (Folder) -> Void
 
     @State private var selectedTab: LibraryTab = .recent
     @State private var searchText = ""
-    @State private var selectedFolder: Folder?
     @State private var isCreatingFolder = false
     @State private var newFolderName = ""
     @State private var isCreatingProgram = false
@@ -217,7 +217,6 @@ struct ScoreLibraryView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         selectedTab = tab
-                        selectedFolder = nil
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -280,13 +279,8 @@ struct ScoreLibraryView: View {
         }
     }
 
-    @ViewBuilder
     private var browseTab: some View {
-        if let folder = selectedFolder {
-            folderDetailView(for: folder)
-        } else {
-            browseCatalogView
-        }
+        browseCatalogView
     }
 
     private var rootFolders: [Folder] {
@@ -354,86 +348,6 @@ struct ScoreLibraryView: View {
             }
             .padding(.vertical, 16)
         }
-    }
-
-    private func folderDetailView(for folder: Folder) -> some View {
-        let subFolders = folder.children.sorted { $0.name < $1.name }
-        let folderPrograms = folder.programs.sorted { $0.updatedAt > $1.updatedAt }
-        let folderScores = folder.scores.sorted { $0.updatedAt > $1.updatedAt }
-        let isEmpty = subFolders.isEmpty && folderPrograms.isEmpty && folderScores.isEmpty
-
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Button {
-                    withAnimation { selectedFolder = folder.parent }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text(folder.parent?.name ?? String(localized: "Browse"))
-                    }
-                    .font(.subheadline)
-                }
-                .padding(.horizontal, 16)
-
-                if isEmpty {
-                    ContentUnavailableView {
-                        Label(String(localized: "Empty Folder"), systemImage: "folder")
-                    } description: {
-                        Text(String(localized: "Import scores and move them to this folder"))
-                    }
-                    .padding(.top, 40)
-                } else {
-                    if !subFolders.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(String(localized: "Folders"))
-                                .font(.title3.bold())
-                                .padding(.horizontal, 16)
-
-                            LazyVGrid(columns: gridColumns, spacing: 16) {
-                                ForEach(subFolders) { child in
-                                    folderCard(for: child)
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
-
-                    if !folderPrograms.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(String(localized: "Programs"))
-                                .font(.title3.bold())
-                                .padding(.horizontal, 16)
-
-                            LazyVGrid(columns: gridColumns, spacing: 16) {
-                                ForEach(folderPrograms) { program in
-                                    programCard(for: program)
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
-
-                    if !folderScores.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            if !subFolders.isEmpty || !folderPrograms.isEmpty {
-                                Text(String(localized: "Scores"))
-                                    .font(.title3.bold())
-                                    .padding(.horizontal, 16)
-                            }
-
-                            LazyVGrid(columns: gridColumns, spacing: 16) {
-                                ForEach(folderScores) { score in
-                                    scoreCard(for: score)
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
-                }
-            }
-            .padding(.vertical, 8)
-        }
-        .navigationTitle(folder.name)
     }
 
     private func scoreCard(for score: Score) -> some View {
@@ -521,7 +435,7 @@ struct ScoreLibraryView: View {
 
     private func folderCard(for folder: Folder) -> some View {
         Button {
-            withAnimation { selectedFolder = folder }
+            onFolderTapped(folder)
         } label: {
             VStack(spacing: 10) {
                 RoundedRectangle(cornerRadius: 12)
@@ -674,7 +588,7 @@ struct ScoreLibraryView: View {
             newFolderName = ""
             return
         }
-        let folder = Folder(name: trimmed, parent: selectedFolder)
+        let folder = Folder(name: trimmed)
         modelContext.insert(folder)
         try? modelContext.save()
         newFolderName = ""
@@ -686,7 +600,7 @@ struct ScoreLibraryView: View {
             newProgramName = ""
             return
         }
-        let program = Program(name: trimmed, folder: selectedFolder)
+        let program = Program(name: trimmed)
         modelContext.insert(program)
         try? modelContext.save()
         newProgramName = ""
@@ -752,9 +666,6 @@ struct ScoreLibraryView: View {
         }
         modelContext.delete(folder)
         try? modelContext.save()
-        if selectedFolder?.id == folder.id {
-            selectedFolder = nil
-        }
     }
 
     private func deleteProgram(_ program: Program) {
@@ -771,9 +682,6 @@ struct ScoreLibraryView: View {
 
     private var visibleScores: [Score] {
         if isSearchActive { return searchResults }
-        if selectedTab == .browse, let folder = selectedFolder {
-            return folder.scores.sorted { $0.updatedAt > $1.updatedAt }
-        }
         return allScores
     }
 
