@@ -275,6 +275,7 @@
       }
     },
     "Empty Folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -359,6 +360,7 @@
       }
     },
     "Import scores and move them to this folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {

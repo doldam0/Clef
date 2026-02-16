@@ -33,61 +33,44 @@ struct FolderDetailView: View {
         folder.scores.sorted { $0.updatedAt > $1.updatedAt }
     }
 
-    private var isEmpty: Bool {
-        subFolders.isEmpty && folderPrograms.isEmpty && folderScores.isEmpty
-    }
-
     private let gridColumns = [
         GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16),
     ]
 
     var body: some View {
         ScrollView {
-            if isEmpty {
-                ContentUnavailableView {
-                    Label(String(localized: "Empty Folder"), systemImage: "folder")
-                } description: {
-                    Text(String(localized: "Import scores and move them to this folder"))
+            VStack(alignment: .leading, spacing: 24) {
+                sectionView(title: String(localized: "Folders")) {
+                    ForEach(subFolders) { child in
+                        folderCard(for: child)
+                    }
+                    newSubfolderCard
                 }
-                .padding(.top, 60)
-            } else {
-                VStack(alignment: .leading, spacing: 24) {
-                    if !subFolders.isEmpty {
-                        sectionView(title: String(localized: "Folders")) {
-                            ForEach(subFolders) { child in
-                                folderCard(for: child)
-                            }
-                        }
+
+                sectionView(title: String(localized: "Programs")) {
+                    ForEach(folderPrograms) { program in
+                        programCard(for: program)
                     }
+                    newProgramCard
+                }
 
-                    if !folderPrograms.isEmpty {
-                        sectionView(title: String(localized: "Programs")) {
-                            ForEach(folderPrograms) { program in
-                                programCard(for: program)
-                            }
-                        }
-                    }
-
-                    if !folderScores.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            if !subFolders.isEmpty || !folderPrograms.isEmpty {
-                                Text(String(localized: "Scores"))
-                                    .font(.title3.bold())
-                                    .padding(.horizontal, 16)
-                            }
-
-                            LazyVGrid(columns: gridColumns, spacing: 16) {
-                                ForEach(folderScores) { score in
-                                    scoreCard(for: score)
-                                }
-                            }
+                if !folderScores.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(String(localized: "Scores"))
+                            .font(.title3.bold())
                             .padding(.horizontal, 16)
-                            .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: folderScores.map(\.id))
+
+                        LazyVGrid(columns: gridColumns, spacing: 16) {
+                            ForEach(folderScores) { score in
+                                scoreCard(for: score)
+                            }
                         }
+                        .padding(.horizontal, 16)
+                        .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: folderScores.map(\.id))
                     }
                 }
-                .padding(.vertical, 16)
             }
+            .padding(.vertical, 16)
         }
         .navigationTitle(folder.name)
         .toolbar {
@@ -174,17 +157,15 @@ struct FolderDetailView: View {
                     }
                 }
 
-                if !folderScores.isEmpty {
-                    if #available(iOS 26, *) {
-                        ToolbarSpacer(.fixed, placement: .primaryAction)
-                    }
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                }
 
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            withAnimation { isSelecting = true }
-                        } label: {
-                            Text(String(localized: "Select"))
-                        }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation { isSelecting = true }
+                    } label: {
+                        Text(String(localized: "Select"))
                     }
                 }
             }
@@ -292,6 +273,56 @@ struct FolderDetailView: View {
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var newSubfolderCard: some View {
+        Button { isCreatingSubfolder = true } label: {
+            VStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+                    .foregroundStyle(.tertiary)
+                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                    .overlay {
+                        VStack(spacing: 8) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                            Text(String(localized: "New Folder"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                Text(" ")
+                    .font(.headline)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var newProgramCard: some View {
+        Button { isCreatingProgram = true } label: {
+            VStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+                    .foregroundStyle(.tertiary)
+                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                    .overlay {
+                        VStack(spacing: 8) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                            Text(String(localized: "New Program"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                Text(" ")
+                    .font(.headline)
             }
         }
         .buttonStyle(.plain)
