@@ -41,11 +41,11 @@ struct ContentView: View {
                 .id(score.id)
             } else {
                 ContentUnavailableView {
-                    Label("악보 선택", systemImage: "music.note.list")
+                    Label("Select Score", systemImage: "music.note.list")
                 } description: {
-                    Text("사이드바에서 악보를 선택하거나 새 악보를 가져오세요.")
+                    Text("Select a score from the sidebar or import a new one.")
                 } actions: {
-                    Button("악보 가져오기") {
+                    Button("Import Score") {
                         isImporting = true
                     }
                 }

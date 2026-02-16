@@ -167,11 +167,11 @@ struct ScoreReaderView: View {
     private var moreMenu: some View {
         Menu {
             Toggle(isOn: $score.isTwoPageMode) {
-                Label("두 쪽 보기", systemImage: "book.pages")
+                Label("Two-Page View", systemImage: "book.pages")
             }
 
             Toggle(isOn: $score.hasCoverPage) {
-                Label("표지", systemImage: "text.book.closed")
+                Label("Cover Page", systemImage: "text.book.closed")
             }
             .disabled(!score.isTwoPageMode)
 
@@ -180,13 +180,13 @@ struct ScoreReaderView: View {
             Button {
                 showMetadataEditor = true
             } label: {
-                Label("악보 정보", systemImage: "info.circle")
+                Label("Score Info", systemImage: "info.circle")
             }
 
             Button {
                 withAnimation { isPerformanceMode = true }
             } label: {
-                Label("공연 모드", systemImage: "play.rectangle.on.rectangle")
+                Label("Performance Mode", systemImage: "play.rectangle.on.rectangle")
             }
         } label: {
             Image(systemName: "ellipsis.circle")

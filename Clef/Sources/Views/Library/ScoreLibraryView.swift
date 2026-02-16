@@ -30,7 +30,7 @@ struct ScoreLibraryView: View {
 
             List {
             if !folders.isEmpty {
-                Section("폴더") {
+                Section("Folders") {
                     ForEach(folders) { folder in
                         FolderRow(
                             folder: folder,
@@ -46,7 +46,7 @@ struct ScoreLibraryView: View {
                 }
             }
 
-            Section(folders.isEmpty ? "악보" : "미분류") {
+            Section(folders.isEmpty ? "Scores" : "Uncategorized") {
                 ForEach(unfolderedScores) { score in
                     Button { onScoreTapped(score) } label: {
                         ScoreRow(score: score, folders: folders, modelContext: modelContext, onRename: { beginScoreRename(score) }, onEdit: { editingScore = score })
@@ -66,41 +66,41 @@ struct ScoreLibraryView: View {
             }
         }
         }
-        .navigationTitle("라이브러리")
+        .navigationTitle("Library")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: onImport) {
-                        Label("악보 가져오기", systemImage: "doc.badge.plus")
+                        Label("Import Score", systemImage: "doc.badge.plus")
                     }
                     Button(action: { isCreatingFolder = true }) {
-                        Label("새 폴더", systemImage: "folder.badge.plus")
+                        Label("New Folder", systemImage: "folder.badge.plus")
                     }
                 } label: {
-                    Label("추가", systemImage: "plus")
+                    Label("Add", systemImage: "plus")
                 }
             }
         }
-        .alert("새 폴더", isPresented: $isCreatingFolder) {
-            TextField("폴더 이름", text: $newFolderName)
-            Button("취소", role: .cancel) { newFolderName = "" }
-            Button("생성") { createFolder() }
+        .alert("New Folder", isPresented: $isCreatingFolder) {
+            TextField("Folder Name", text: $newFolderName)
+            Button("Cancel", role: .cancel) { newFolderName = "" }
+            Button("Create") { createFolder() }
         }
-        .alert("폴더 이름 변경", isPresented: .init(
+        .alert("Rename Folder", isPresented: .init(
             get: { renamingFolder != nil },
             set: { if !$0 { renamingFolder = nil } }
         )) {
-            TextField("폴더 이름", text: $renameText)
-            Button("취소", role: .cancel) { renamingFolder = nil }
-            Button("변경") { commitRename() }
+            TextField("Folder Name", text: $renameText)
+            Button("Cancel", role: .cancel) { renamingFolder = nil }
+            Button("Rename") { commitRename() }
         }
-        .alert("악보 이름 변경", isPresented: .init(
+        .alert("Rename Score", isPresented: .init(
             get: { renamingScore != nil },
             set: { if !$0 { renamingScore = nil } }
         )) {
-            TextField("악보 이름", text: $scoreRenameText)
-            Button("취소", role: .cancel) { renamingScore = nil }
-            Button("변경") { commitScoreRename() }
+            TextField("Score Name", text: $scoreRenameText)
+            Button("Cancel", role: .cancel) { renamingScore = nil }
+            Button("Rename") { commitScoreRename() }
         }
         .sheet(item: $editingScore) { score in
             ScoreMetadataEditorView(score: score, existingTags: allTags)
@@ -233,11 +233,11 @@ private struct FolderRow: View {
                 .badge(filteredScores.count)
                 .contextMenu {
                     Button(action: onRename) {
-                        Label("이름 변경", systemImage: "pencil")
+                        Label("Rename", systemImage: "pencil")
                     }
                     Divider()
                     Button(role: .destructive, action: onDelete) {
-                        Label("삭제", systemImage: "trash")
+                        Label("Delete", systemImage: "trash")
                     }
                 }
         }
@@ -284,18 +284,18 @@ private struct ScoreRow: View {
         .contextMenu {
             if let onEdit {
                 Button(action: onEdit) {
-                    Label("정보 편집", systemImage: "info.circle")
+                    Label("Edit Info", systemImage: "info.circle")
                 }
             }
 
             if let onRename {
                 Button(action: onRename) {
-                    Label("이름 변경", systemImage: "pencil")
+                    Label("Rename", systemImage: "pencil")
                 }
             }
 
             if !folders.isEmpty, let modelContext {
-                Menu("폴더로 이동") {
+                Menu("Move to Folder") {
                     ForEach(folders) { folder in
                         Button(folder.name) {
                             score.folder = folder
@@ -305,7 +305,7 @@ private struct ScoreRow: View {
                     }
                     if score.folder != nil {
                         Divider()
-                        Button("미분류로 이동") {
+                        Button("Move to Uncategorized") {
                             score.folder = nil
                             score.updatedAt = .now
                             try? modelContext.save()

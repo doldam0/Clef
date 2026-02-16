@@ -7,6 +7,8 @@ options:
   defaultConfig: Debug
   groupSortPosition: top
   generateEmptyDirectories: true
+  developmentLanguage: en
+  knownRegions: [en, ko]
 
 settings:
   base:

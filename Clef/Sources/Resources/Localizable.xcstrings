@@ -1,0 +1,362 @@
+{
+  "sourceLanguage" : "en",
+  "version" : "1.0",
+  "strings" : {
+    "Select Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 선택"
+          }
+        }
+      }
+    },
+    "Select a score from the sidebar or import a new one." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사이드바에서 악보를 선택하거나 새 악보를 가져오세요."
+          }
+        }
+      }
+    },
+    "Import Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 가져오기"
+          }
+        }
+      }
+    },
+    "Library" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더"
+          }
+        }
+      }
+    },
+    "Scores" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보"
+          }
+        }
+      }
+    },
+    "Uncategorized" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미분류"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가"
+          }
+        }
+      }
+    },
+    "New Folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 폴더"
+          }
+        }
+      }
+    },
+    "Folder Name" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더 이름"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "취소"
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "생성"
+          }
+        }
+      }
+    },
+    "Rename Folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더 이름 변경"
+          }
+        }
+      }
+    },
+    "Rename" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경"
+          }
+        }
+      }
+    },
+    "Rename Score" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 이름 변경"
+          }
+        }
+      }
+    },
+    "Score Name" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 이름"
+          }
+        }
+      }
+    },
+    "Edit Info" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보 편집"
+          }
+        }
+      }
+    },
+    "Move to Folder" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더로 이동"
+          }
+        }
+      }
+    },
+    "Move to Uncategorized" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미분류로 이동"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "삭제"
+          }
+        }
+      }
+    },
+    "Two-Page View" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 쪽 보기"
+          }
+        }
+      }
+    },
+    "Cover Page" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "표지"
+          }
+        }
+      }
+    },
+    "Score Info" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악보 정보"
+          }
+        }
+      }
+    },
+    "Performance Mode" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공연 모드"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본 정보"
+          }
+        }
+      }
+    },
+    "Title" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제목"
+          }
+        }
+      }
+    },
+    "Composer" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작곡가"
+          }
+        }
+      }
+    },
+    "Instrument" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "악기"
+          }
+        }
+      }
+    },
+    "Music Info" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "음악 정보"
+          }
+        }
+      }
+    },
+    "Key (e.g. C Major)" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조성 (예: C Major)"
+          }
+        }
+      }
+    },
+    "Time Signature (e.g. 4/4)" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "박자 (예: 4/4)"
+          }
+        }
+      }
+    },
+    "Tags" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그"
+          }
+        }
+      }
+    },
+    "Add Tag" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 추가"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "닫기"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료"
+          }
+        }
+      }
+    },
+    "%lld / %lld" : {
+
+    },
+    "+%lld" : {
+
+    }
+  }
+}

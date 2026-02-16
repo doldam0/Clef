@@ -13,22 +13,22 @@ struct ScoreMetadataEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("기본 정보") {
-                    TextField("제목", text: $score.title)
-                    TextField("작곡가", text: optionalBinding($score.composer))
-                    TextField("악기", text: optionalBinding($score.instrument))
+                Section("General") {
+                    TextField("Title", text: $score.title)
+                    TextField("Composer", text: optionalBinding($score.composer))
+                    TextField("Instrument", text: optionalBinding($score.instrument))
                 }
 
-                Section("음악 정보") {
-                    TextField("조성 (예: C Major)", text: optionalBinding($score.key))
-                    TextField("박자 (예: 4/4)", text: optionalBinding($score.timeSignature))
+                Section("Music Info") {
+                    TextField("Key (e.g. C Major)", text: optionalBinding($score.key))
+                    TextField("Time Signature (e.g. 4/4)", text: optionalBinding($score.timeSignature))
                 }
 
-                Section("태그") {
+                Section("Tags") {
                     tagChipsView
 
                     HStack {
-                        TextField("태그 추가", text: $newTagText)
+                        TextField("Add Tag", text: $newTagText)
                             .focused($isTagFieldFocused)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
@@ -61,14 +61,14 @@ struct ScoreMetadataEditorView: View {
                     }
                 }
             }
-            .navigationTitle("악보 정보")
+            .navigationTitle("Score Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("완료") {
+                    Button("Done") {
                         score.updatedAt = .now
                         try? modelContext.save()
                         dismiss()

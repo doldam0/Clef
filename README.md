@@ -1,6 +1,6 @@
 # Clef
 
-> iPad 전용 악보 뷰어 — Apple-native 필기 도구와 on-device AI 음표 인식
+> iPad-exclusive sheet music viewer — Apple-native writing tools & on-device AI music notation recognition
 
 [![Platform](https://img.shields.io/badge/platform-iPadOS%2018+-blue)](https://developer.apple.com/ipados/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
@@ -8,148 +8,148 @@
 
 ---
 
-## 왜 Clef인가
+## Why Clef?
 
-기존 악보 앱(forScore, Newzik, Piascore 등)은 모두 **자체 필기 엔진**을 사용한다. Apple Pencil Pro 제스처를 지원하는 악보 앱은 **단 하나도 없다.** AI로 악보를 분석하는 앱도 Newzik LiveScore 하나뿐이며, 이마저도 클라우드 기반이라 오프라인 사용이 불가능하다.
+Existing sheet music apps (forScore, Newzik, Piascore, etc.) all use **custom drawing engines**. Not a single sheet music app supports Apple Pencil Pro gestures. The only app that analyzes sheet music with AI is Newzik LiveScore — and even that is cloud-based, making offline use impossible.
 
-Clef는 이 세 가지 공백을 동시에 채운다:
+Clef fills all three gaps at once:
 
-| 기존 앱의 한계 | Clef의 접근 |
+| Existing App Limitations | Clef's Approach |
 |---|---|
-| 자체 필기 엔진 → 투박한 필기감 | **PencilKit** — Apple 메모 앱과 동일한 필기 도구 |
-| Apple Pencil Pro 미지원 | **Squeeze, Barrel Roll, Haptic Feedback** 완전 지원 |
-| AI 미지원 or 클라우드 의존 | **On-device Core ML** — 오프라인 OMR |
+| Custom drawing engine → clunky writing experience | **PencilKit** — same writing tools as Apple Notes |
+| No Apple Pencil Pro support | **Squeeze, Barrel Roll, Haptic Feedback** fully supported |
+| No AI or cloud-dependent | **On-device Core ML** — offline OMR |
 
 ---
 
-## 핵심 기능
+## Key Features
 
-### 1. Apple-Native 필기 도구
+### 1. Apple-Native Writing Tools
 
-PencilKit 기반으로 Apple 메모 앱과 **동일한 필기 경험**을 제공한다.
+PencilKit-based, providing the **same writing experience as Apple Notes**.
 
-**기본 필기 도구** (PKToolPicker):
-- 펜 (`.pen`) — 균일한 두께의 잉크
-- 연필 (`.pencil`) — 압력 감지, 텍스처 표현
-- 마커 (`.marker`) — 반투명, Barrel Roll 지원
-- 만년필 (`.fountainPen`) — 캘리그래피, Barrel Roll 지원
-- 모노라인 (`.monoline`) — 압력 무관 균일 두께
-- 지우개 (`.bitmap`, `.vector`) — 픽셀/스트로크 단위 삭제
-- 올가미 (`.lasso`) — 필기 선택 및 이동
-- 눈금자 (`.ruler`) — 직선 가이드
+**Default Writing Tools** (PKToolPicker):
+- Pen (`.pen`) — uniform stroke width
+- Pencil (`.pencil`) — pressure-sensitive, textured
+- Marker (`.marker`) — translucent, Barrel Roll support
+- Fountain Pen (`.fountainPen`) — calligraphy, Barrel Roll support
+- Monoline (`.monoline`) — pressure-independent uniform width
+- Eraser (`.bitmap`, `.vector`) — pixel/stroke-level deletion
+- Lasso (`.lasso`) — select and move ink
+- Ruler (`.ruler`) — straight line guide
 
-**커스텀 악보 도구** (PKToolPickerCustomItem, iOS 18+):
-- 악상 기호 팔레트 (f, p, ff, pp, sfz, crescendo, decrescendo 등)
-- 아티큘레이션 (스타카토, 테누토, 악센트, 페르마타 등)
-- 음표/쉼표 스탬프 (온음표~64분음표, 점음표)
-- 연주 기호 (트릴, 턴, 모르덴트, 글리산도 등)
-- 반복/구조 기호 (리허설 마크, 코다, 세뇨 등)
+**Custom Music Tools** (PKToolPickerCustomItem, iOS 18+):
+- Expression mark palette (f, p, ff, pp, sfz, crescendo, decrescendo, etc.)
+- Articulations (staccato, tenuto, accent, fermata, etc.)
+- Note/rest stamps (whole note–64th note, dotted notes)
+- Performance marks (trill, turn, mordent, glissando, etc.)
+- Repeat/structure marks (rehearsal mark, coda, segno, etc.)
 
-### 2. Apple Pencil Pro 완전 지원
+### 2. Full Apple Pencil Pro Support
 
-| 제스처 | 동작 | API |
+| Gesture | Action | API |
 |---|---|---|
-| **Squeeze** | 악상 기호 팔레트 호출 | `UIPencilInteraction.Squeeze` |
-| **Barrel Roll** | 마커/만년필 각도 조절 | `UITouch.rollAngle` |
-| **Haptic Feedback** | 스냅/정렬 시 진동 피드백 | `UICanvasFeedbackGenerator` |
-| **Hover** | 필기 전 미리보기 | `UIHoverGestureRecognizer` |
-| **Double Tap** | 도구 전환 (사용자 설정 존중) | `UIPencilInteraction.preferredTapAction` |
+| **Squeeze** | Open expression mark palette | `UIPencilInteraction.Squeeze` |
+| **Barrel Roll** | Adjust marker/fountain pen angle | `UITouch.rollAngle` |
+| **Haptic Feedback** | Vibration on snap/alignment | `UICanvasFeedbackGenerator` |
+| **Hover** | Preview before writing | `UIHoverGestureRecognizer` |
+| **Double Tap** | Switch tools (respects user settings) | `UIPencilInteraction.preferredTapAction` |
 
-**Squeeze → 통합 팔레트 흐름:**
-1. Apple Pencil Pro를 쥐어 짜면 (`squeeze.phase == .ended`)
-2. 펜슬 hover 위치에 **통합 컨텍스트 팔레트** 표시 (`squeeze.hoverPose?.location`)
-3. 팔레트 상단 세그먼트 탭: `[악상 기호 | 필기 도구]`
-   - **악상 기호 탭**: 다이나믹, 아티큘레이션, 음표/쉼표 스탬프 등
-   - **필기 도구 탭**: 펜/연필/마커 종류, 색상, 두께 빠른 전환
-4. 기본 탭은 사용자 설정에서 변경 가능 (설정 > 팔레트 > 기본 탭)
-5. 마지막 사용 탭을 기억하는 옵션도 제공
-6. 사용자 시스템 설정이 `showContextualPalette`일 때만 작동 (시스템 설정 존중)
+**Squeeze → Unified Palette Flow:**
+1. Squeeze the Apple Pencil Pro (`squeeze.phase == .ended`)
+2. Display **unified context palette** at pencil hover position (`squeeze.hoverPose?.location`)
+3. Palette top segment tabs: `[Expression Marks | Writing Tools]`
+   - **Expression Marks tab**: dynamics, articulations, note/rest stamps, etc.
+   - **Writing Tools tab**: pen/pencil/marker types, color, thickness quick switch
+4. Default tab is configurable in settings (Settings > Palette > Default Tab)
+5. Option to remember last-used tab
+6. Only activates when user system setting is `showContextualPalette` (respects system settings)
 
-### 3. On-Device AI 음표 인식
+### 3. On-Device AI Music Notation Recognition
 
-스캔된 PDF 악보에서 **음악 기호를 자동으로 감지**한다. 모든 처리는 디바이스에서 수행되어 **오프라인에서도 동작**한다.
+Automatically **detects music symbols** from scanned PDF scores. All processing runs on-device, **works offline**.
 
-**기술 스택:**
-- **모델**: YOLOv8 → Core ML 변환
-- **추론**: Vision Framework (`VNCoreMLRequest`)
-- **학습 데이터**: 사전 훈련된 OMR 모델 (7,000+ 이미지, 500K+ 바운딩 박스)
+**Tech Stack:**
+- **Model**: YOLOv8 → Core ML conversion
+- **Inference**: Vision Framework (`VNCoreMLRequest`)
+- **Training Data**: Pre-trained OMR model (7,000+ images, 500K+ bounding boxes)
 
-**감지 가능한 기호:**
-- 음표 (온음표 ~ 64분음표, 점음표, 묶음)
-- 쉼표 (온쉼표 ~ 64분쉼표)
-- 음자리표 (높은음자리표, 낮은음자리표, 가온음자리표)
-- 조표, 박자표
-- 아티큘레이션, 다이나믹 기호
-- 이음줄, 붙임줄, 셋잇단음표 등
+**Detectable Symbols:**
+- Notes (whole note–64th note, dotted notes, beamed)
+- Rests (whole rest–64th rest)
+- Clefs (treble, bass, alto)
+- Key signatures, time signatures
+- Articulations, dynamics
+- Ties, slurs, triplets, etc.
 
-**사용자 워크플로우:**
-1. PDF 악보를 가져온다
-2. "분석" 버튼으로 OMR 실행 → 기호별 바운딩 박스 생성
-3. 감지된 기호를 탭하여 삭제/수정/이동
-4. 팔레트에서 새 기호를 드래그하여 추가
-5. 수정 사항은 오버레이 레이어로 저장 (원본 PDF 보존)
+**User Workflow:**
+1. Import a PDF score
+2. Run OMR via "Analyze" button → generates bounding boxes per symbol
+3. Tap detected symbols to delete/edit/move
+4. Drag new symbols from palette to add
+5. Modifications saved as overlay layer (original PDF preserved)
 
-### 4. PDF 악보 관리
+### 4. PDF Sheet Music Management
 
-**뷰어:**
-- PDFKit 기반 고성능 렌더링
-- 페이지별 PencilKit 오버레이 (투명 PKCanvasView)
-- 연속 스크롤 / 페이지 넘기기 모드
-- 양면 보기 (랜드스케이프)
-- AirTurn 등 블루투스 페달 페이지 넘기기
+**Viewer:**
+- High-performance rendering via PDFKit
+- Per-page PencilKit overlay (transparent PKCanvasView)
+- Continuous scroll / page flip modes
+- Two-page spread (landscape)
+- Bluetooth pedal page turning (AirTurn, etc.)
 
-**라이브러리:**
-- 폴더/태그 기반 정리
-- Spotlight 검색 연동
-- 메타데이터 (작곡가, 조성, 박자, 악기 등)
-- iCloud Drive 동기화
+**Library:**
+- Folder/tag-based organization
+- Spotlight search integration
+- Metadata (composer, key, time signature, instrument, etc.)
+- iCloud Drive sync
 
 ---
 
-## 아키텍처
+## Architecture
 
-### 기술 스택
+### Tech Stack
 
-| 레이어 | 기술 | 비고 |
+| Layer | Technology | Notes |
 |---|---|---|
-| **UI** | SwiftUI + UIKit 브릿지 | PencilKit은 UIKit 기반, SwiftUI로 래핑 |
-| **PDF 렌더링** | PDFKit (`PDFView`) | 네이티브 PDF 렌더링 |
-| **필기** | PencilKit (`PKCanvasView`) | PDF 페이지별 오버레이 |
-| **도구** | PencilKit (`PKToolPicker`) | 커스텀 아이템 포함 |
-| **AI/ML** | Core ML + Vision | YOLOv8 기반 OMR 모델 |
-| **데이터** | SwiftData | 악보 메타데이터, 설정 |
-| **필기 저장** | PKDrawing (Codable) | 페이지별 직렬화 |
-| **동기화** | CloudKit (iCloud) | 악보 + 필기 동기화 |
+| **UI** | SwiftUI + UIKit bridge | PencilKit is UIKit-based, wrapped in SwiftUI |
+| **PDF Rendering** | PDFKit (`PDFView`) | Native PDF rendering |
+| **Writing** | PencilKit (`PKCanvasView`) | Per-page overlay |
+| **Tools** | PencilKit (`PKToolPicker`) | Includes custom items |
+| **AI/ML** | Core ML + Vision | YOLOv8-based OMR model |
+| **Data** | SwiftData | Score metadata, settings |
+| **Drawing Storage** | PKDrawing (Codable) | Per-page serialization |
+| **Sync** | CloudKit (iCloud) | Score + drawing sync |
 
-### 레이어 구성
+### Layer Structure
 
 ```
 ┌─────────────────────────────────────────────┐
 │                 Clef App                     │
 ├─────────────────────────────────────────────┤
 │  Presentation Layer (SwiftUI)               │
-│  ├── ScoreLibraryView     (악보 목록)        │
-│  ├── ScoreReaderView      (악보 뷰어)        │
-│  │   ├── PDFPageView      (PDF 렌더링)       │
-│  │   ├── CanvasOverlay    (PencilKit 필기)   │
-│  │   └── SymbolPalette    (악상 기호 팔레트)  │
-│  └── SettingsView         (설정)             │
+│  ├── ScoreLibraryView     (score list)      │
+│  ├── ScoreReaderView      (score viewer)    │
+│  │   ├── PDFPageView      (PDF rendering)   │
+│  │   ├── CanvasOverlay    (PencilKit)       │
+│  │   └── SymbolPalette    (expression marks)│
+│  └── SettingsView         (settings)        │
 ├─────────────────────────────────────────────┤
 │  Domain Layer                                │
-│  ├── ScoreManager         (악보 CRUD)        │
-│  ├── AnnotationManager    (필기 관리)         │
-│  ├── OMREngine            (음표 인식)         │
-│  └── SymbolLibrary        (악상 기호 DB)      │
+│  ├── ScoreManager         (score CRUD)      │
+│  ├── AnnotationManager    (drawing mgmt)    │
+│  ├── OMREngine            (note recognition)│
+│  └── SymbolLibrary        (symbol DB)       │
 ├─────────────────────────────────────────────┤
 │  Infrastructure Layer                        │
-│  ├── PDFService           (PDFKit 래퍼)      │
-│  ├── MLService            (Core ML 래퍼)     │
-│  ├── StorageService       (SwiftData)        │
-│  └── CloudService         (CloudKit)         │
+│  ├── PDFService           (PDFKit wrapper)  │
+│  ├── MLService            (Core ML wrapper) │
+│  ├── StorageService       (SwiftData)       │
+│  └── CloudService         (CloudKit)        │
 └─────────────────────────────────────────────┘
 ```
 
-### PDF + PencilKit 오버레이 구조
+### PDF + PencilKit Overlay Structure
 
 ```
 ┌─────────────────────────────────┐
@@ -159,7 +159,7 @@ PencilKit 기반으로 Apple 메모 앱과 **동일한 필기 경험**을 제공
 │  │  ┌─────────────────────┐  │  │
 │  │  │     PDF Page 1      │  │  │
 │  │  │  ┌───────────────┐  │  │  │
-│  │  │  │ PKCanvasView  │  │  │  │  ← 투명 오버레이 (필기)
+│  │  │  │ PKCanvasView  │  │  │  │  ← transparent overlay (drawing)
 │  │  │  │   (overlay)   │  │  │  │
 │  │  │  └───────────────┘  │  │  │
 │  │  └─────────────────────┘  │  │
@@ -172,45 +172,45 @@ PencilKit 기반으로 Apple 메모 앱과 **동일한 필기 경험**을 제공
 │  │  └─────────────────────┘  │  │
 │  └───────────────────────────┘  │
 │  ┌───────────────────────────┐  │
-│  │      PKToolPicker         │  │  ← 하단 도구 막대
-│  │  [펜][연필][마커]...       │  │
-│  │  [♩ 음표][𝆑 기호]        │  │  ← 커스텀 악보 도구
+│  │      PKToolPicker         │  │  ← bottom toolbar
+│  │  [pen][pencil][marker]... │  │
+│  │  [♩ notes][𝆑 symbols]    │  │  ← custom music tools
 │  └───────────────────────────┘  │
 └─────────────────────────────────┘
 ```
 
-### OMR 파이프라인
+### OMR Pipeline
 
 ```
 PDF Page Image
      │
      ▼
 ┌──────────────┐
-│ Preprocessing │  → 이진화, 노이즈 제거, 기울기 보정
+│ Preprocessing │  → binarization, noise removal, deskew
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│  YOLOv8 Model │  → Core ML 추론 (VNCoreMLRequest)
+│  YOLOv8 Model │  → Core ML inference (VNCoreMLRequest)
 │  (on-device)  │
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│  Post-process │  → NMS, 바운딩 박스 → 기호 분류
+│  Post-process │  → NMS, bounding box → symbol classification
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
-│ Symbol Layer  │  → 편집 가능한 기호 오버레이
+│ Symbol Layer  │  → editable symbol overlay
 └──────────────┘
 ```
 
 ---
 
-## 데이터 모델
+## Data Models
 
-### Score (악보)
+### Score
 
 ```swift
 @Model
@@ -219,64 +219,64 @@ class Score {
     var title: String
     var composer: String?
     var instrument: String?
-    var key: String?            // 조성 (예: "C Major")
-    var timeSignature: String?  // 박자 (예: "4/4")
+    var key: String?            // key signature (e.g. "C Major")
+    var timeSignature: String?  // time signature (e.g. "4/4")
     var tags: [String]
-    var pdfData: Data           // PDF 원본
-    var pageAnnotations: [PageAnnotation]  // 페이지별 필기
+    var pdfData: Data           // original PDF
+    var pageAnnotations: [PageAnnotation]  // per-page drawings
     var createdAt: Date
     var updatedAt: Date
 }
 ```
 
-### PageAnnotation (페이지 필기)
+### PageAnnotation
 
 ```swift
 @Model
 class PageAnnotation {
     var pageIndex: Int
-    var drawingData: Data       // PKDrawing 직렬화
-    var symbolOverlays: [SymbolOverlay]  // OMR 감지/사용자 추가 기호
+    var drawingData: Data       // PKDrawing serialized
+    var symbolOverlays: [SymbolOverlay]  // OMR-detected / user-added symbols
 }
 ```
 
-### SymbolOverlay (악보 기호 오버레이)
+### SymbolOverlay
 
 ```swift
 struct SymbolOverlay: Codable {
     var id: UUID
-    var type: MusicSymbolType   // 음표, 쉼표, 다이나믹 등
-    var boundingBox: CGRect     // 위치 및 크기
-    var isDetected: Bool        // OMR 감지 vs 사용자 추가
-    var isDeleted: Bool         // 소프트 삭제 (원본 보존)
+    var type: MusicSymbolType   // notes, rests, dynamics, etc.
+    var boundingBox: CGRect     // position and size
+    var isDetected: Bool        // OMR-detected vs user-added
+    var isDeleted: Bool         // soft delete (preserves original)
 }
 ```
 
-### MusicSymbolType (악보 기호 분류)
+### MusicSymbolType
 
 ```swift
 enum MusicSymbolType: String, Codable {
-    // 음표
+    // Notes
     case wholeNote, halfNote, quarterNote, eighthNote, sixteenthNote
     case dottedHalfNote, dottedQuarterNote, dottedEighthNote
     
-    // 쉼표
+    // Rests
     case wholeRest, halfRest, quarterRest, eighthRest, sixteenthRest
     
-    // 음자리표
+    // Clefs
     case trebleClef, bassClef, altoClef
     
-    // 다이나믹
+    // Dynamics
     case pianissimo, piano, mezzoPiano, mezzoForte, forte, fortissimo
     case sforzando, crescendo, decrescendo
     
-    // 아티큘레이션
+    // Articulations
     case staccato, tenuto, accent, fermata, marcato
     
-    // 장식음
+    // Ornaments
     case trill, turn, mordent, glissando
     
-    // 구조
+    // Structure
     case coda, segno, rehearsalMark
     case repeatStart, repeatEnd
 }
@@ -284,58 +284,61 @@ enum MusicSymbolType: String, Codable {
 
 ---
 
-## 로드맵
+## Roadmap
 
-### Phase 1 — 기본 뷰어 (MVP)
+### Phase 1 — Basic Viewer (MVP)
 
-- [ ] Xcode 프로젝트 설정 (iPadOS 18+, Swift 6)
-- [ ] PDF 가져오기 및 렌더링 (PDFKit)
-- [ ] 페이지별 PencilKit 오버레이
-- [ ] PKToolPicker 기본 도구 연동
-- [ ] 필기 데이터 저장/불러오기 (SwiftData)
-- [ ] 기본 악보 라이브러리 (목록, 폴더)
+- [x] Xcode project setup (iPadOS 18+, Swift 6)
+- [x] PDF import & rendering (PDFKit)
+- [x] Per-page PencilKit overlay
+- [x] PKToolPicker default tool integration
+- [x] Drawing data save/load (SwiftData)
+- [x] Basic score library (list, folders)
+- [x] Score metadata editor (key, time signature, tags)
+- [x] Tag-based filtering
+- [x] Localization (English / Korean)
 
-### Phase 2 — Apple Pencil Pro & 커스텀 도구
+### Phase 2 — Apple Pencil Pro & Custom Tools
 
-- [ ] Apple Pencil Pro Squeeze → 컨텍스트 팔레트
-- [ ] Barrel Roll 지원 (마커, 만년필)
-- [ ] Haptic Feedback (스냅, 정렬)
-- [ ] PKToolPickerCustomItem — 악상 기호 도구
-- [ ] 기호 드래그 & 드롭 배치
-- [ ] SMuFL 폰트 기반 기호 렌더링
+- [ ] Apple Pencil Pro Squeeze → context palette
+- [ ] Barrel Roll support (marker, fountain pen)
+- [ ] Haptic Feedback (snap, alignment)
+- [ ] PKToolPickerCustomItem — expression mark tools
+- [ ] Symbol drag & drop placement
+- [ ] SMuFL font-based symbol rendering
 
 ### Phase 3 — On-Device AI (OMR)
 
-- [ ] YOLOv8 OMR 모델 학습 및 Core ML 변환
-- [ ] Vision Framework 추론 파이프라인
-- [ ] 감지 결과 → SymbolOverlay 매핑
-- [ ] 기호 선택/삭제/이동 UI
-- [ ] 기호 추가 (팔레트 → 드래그)
-- [ ] 전처리 최적화 (Metal Performance Shaders)
-- [ ] 악보 메타데이터 자동 감지 (조성, 박자, 작곡가, 제목 등)
-  - PDF 첫 페이지 OCR → 제목/작곡가 추출 (Vision `VNRecognizeTextRequest`)
-  - OMR 결과에서 조표/박자표 자동 인식 → `key`, `timeSignature` 자동 채우기
-  - 사용자 확인 후 메타데이터 반영 (자동 저장 아님, 제안 UI)
+- [ ] YOLOv8 OMR model training & Core ML conversion
+- [ ] Vision Framework inference pipeline
+- [ ] Detection results → SymbolOverlay mapping
+- [ ] Symbol select/delete/move UI
+- [ ] Symbol addition (palette → drag)
+- [ ] Preprocessing optimization (Metal Performance Shaders)
+- [ ] Auto-detect score metadata (key, time signature, composer, title, etc.)
+  - OCR first PDF page → extract title/composer (Vision `VNRecognizeTextRequest`)
+  - Recognize key/time signatures from OMR results → auto-fill `key`, `timeSignature`
+  - Apply metadata after user confirmation (suggestion UI, not auto-save)
 
-### Phase 4 — 완성도
+### Phase 4 — Polish
 
-- [ ] iCloud 동기화 (CloudKit)
-- [ ] Spotlight 검색 연동
-- [ ] 블루투스 페달 페이지 넘기기
-- [ ] 다크 모드 / 세피아 모드
-- [ ] 반페이지 넘기기, 양면 보기
-- [ ] 내보내기 (PDF with annotations, 이미지)
-- [ ] 접근성 (VoiceOver, Dynamic Type)
+- [ ] iCloud sync (CloudKit)
+- [ ] Spotlight search integration
+- [ ] Bluetooth pedal page turning
+- [ ] Dark mode / sepia mode
+- [ ] Half-page turning, two-page spread
+- [ ] Export (PDF with annotations, images)
+- [ ] Accessibility (VoiceOver, Dynamic Type)
 
 ---
 
-## 요구 사항
+## Requirements
 
 - iPadOS 18.0+
-- Apple Pencil (1세대 / 2세대 / Pro)
+- Apple Pencil (1st gen / 2nd gen / Pro)
 - Xcode 16+
 - Swift 6.0
 
-## 라이선스
+## License
 
 [Apache License 2.0](LICENSE)
