@@ -165,7 +165,7 @@ struct FolderDetailView: View {
                     Button {
                         withAnimation { isSelecting = true }
                     } label: {
-                        Text(String(localized: "Select"))
+                        Label(String(localized: "Select"), systemImage: "checkmark.circle")
                     }
                 }
             }
