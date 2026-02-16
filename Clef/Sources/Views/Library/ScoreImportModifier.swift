@@ -59,6 +59,7 @@ struct ScoreImportModifier: ViewModifier {
                             }
                         }
                     }
+                    .id(first.score.id)
                 }
             }
     }

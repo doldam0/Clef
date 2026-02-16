@@ -4,6 +4,8 @@ import UIKit
 struct ScoreCardView: View {
     @Environment(\.colorScheme) private var colorScheme
     let score: Score
+    var isSelecting: Bool = false
+    var isSelected: Bool = false
     @State private var thumbnail: UIImage?
 
     var body: some View {
@@ -50,6 +52,15 @@ struct ScoreCardView: View {
                     .padding(5)
                     .background(.red, in: Circle())
                     .padding(6)
+            }
+
+            if isSelecting {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? .white : .secondary)
+                    .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), in: Circle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(8)
             }
         }
     }

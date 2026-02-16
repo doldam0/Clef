@@ -194,12 +194,52 @@
         }
       }
     },
+    "Delete %lld scores permanently? This cannot be undone." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개의 악보를 영구적으로 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+          }
+        }
+      }
+    },
+    "Delete %lld scores? This cannot be undone." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개의 악보를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+          }
+        }
+      }
+    },
     "Delete Score" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "악보 삭제"
+          }
+        }
+      }
+    },
+    "Delete Selected" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택 항목 삭제"
+          }
+        }
+      }
+    },
+    "Deselect All" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전체 선택 해제"
           }
         }
       }
@@ -409,6 +449,16 @@
         }
       }
     },
+    "Move" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이동"
+          }
+        }
+      }
+    },
     "Move to Folder" : {
       "localizations" : {
         "ko" : {
@@ -571,12 +621,42 @@
         }
       }
     },
+    "Remove" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제거"
+          }
+        }
+      }
+    },
+    "Remove %lld scores from this program?" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 프로그램에서 %lld개의 악보를 제거하시겠습니까?"
+          }
+        }
+      }
+    },
     "Remove from Folder" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "폴더에서 제거"
+          }
+        }
+      }
+    },
+    "Remove from Program" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로그램에서 제거"
           }
         }
       }
@@ -686,6 +766,17 @@
         }
       }
     },
+    "Select" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택"
+          }
+        }
+      }
+    },
     "Select a score from the sidebar or import a new one." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -693,6 +784,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "사이드바에서 악보를 선택하거나 새 악보를 가져오세요."
+          }
+        }
+      }
+    },
+    "Select All" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전체 선택"
           }
         }
       }

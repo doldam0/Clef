@@ -8,45 +8,137 @@ struct ProgramDetailView: View {
     var onPlayProgram: (Program) -> Void
 
     @State private var isImporting = false
+    @State private var isSelecting = false
+    @State private var selectedItemIds: Set<UUID> = []
+    @State private var showDeleteSelectedAlert = false
+    @State private var showRemoveSelectedAlert = false
 
     var body: some View {
         Group {
             if program.orderedItems.isEmpty {
-                ContentUnavailableView {
-                    Label("No Scores", systemImage: "music.note.list")
-                } description: {
-                    Text("Add scores to this program")
-                } actions: {
-                    Button(String(localized: "Import Score")) {
-                        isImporting = true
-                    }
-                }
+                emptyView
             } else {
-                List {
-                    ForEach(program.orderedItems) { item in
-                        if let score = item.score {
-                            Button {
-                                onScoreTapped(score)
-                            } label: {
-                                ProgramScoreRow(item: item)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .onMove(perform: moveItems)
-                    .onDelete(perform: deleteItems)
-                }
+                scoreList
             }
         }
         .navigationTitle(program.name)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+        .toolbar(content: programToolbar)
+        .alert(String(localized: "Remove from Program"), isPresented: $showRemoveSelectedAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) {}
+            Button(String(localized: "Remove"), role: .destructive) { removeSelectedItems() }
+        } message: {
+            Text("Remove \(selectedItemIds.count) scores from this program?")
+        }
+        .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) {}
+            Button(String(localized: "Delete"), role: .destructive) { deleteSelectedItems() }
+        } message: {
+            Text("Delete \(selectedItemIds.count) scores permanently? This cannot be undone.")
+        }
+        .scoreImporter(isPresented: $isImporting, program: program)
+    }
+
+    private var emptyView: some View {
+        ContentUnavailableView {
+            Label("No Scores", systemImage: "music.note.list")
+        } description: {
+            Text("Add scores to this program")
+        } actions: {
+            Button(String(localized: "Import Score")) {
+                isImporting = true
+            }
+        }
+    }
+
+    private var scoreList: some View {
+        List {
+            if isSelecting {
+                ForEach(program.orderedItems) { item in
+                    programRow(for: item)
+                }
+            } else {
+                ForEach(program.orderedItems) { item in
+                    programRow(for: item)
+                }
+                .onMove(perform: moveItems)
+                .onDelete(perform: deleteItems)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func programRow(for item: ProgramItem) -> some View {
+        if let score = item.score {
+            Button {
+                if isSelecting {
+                    toggleSelection(item)
+                } else {
+                    onScoreTapped(score)
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    if isSelecting {
+                        selectionIndicator(for: item)
+                    }
+                    ProgramScoreRow(item: item)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func selectionIndicator(for item: ProgramItem) -> some View {
+        let selected = selectedItemIds.contains(item.id)
+        return Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            .font(.title3)
+            .foregroundStyle(selected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+    }
+
+    private var allItemsSelected: Bool {
+        let items = program.orderedItems
+        return !items.isEmpty && selectedItemIds.count == items.count
+    }
+
+    @ToolbarContentBuilder
+    private func programToolbar() -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if isSelecting {
+                Button(allItemsSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
+                    withAnimation {
+                        if allItemsSelected {
+                            selectedItemIds.removeAll()
+                        } else {
+                            selectedItemIds = Set(program.orderedItems.map(\.id))
+                        }
+                    }
+                }
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            if isSelecting {
+                Button {
+                    showRemoveSelectedAlert = true
+                } label: {
+                    Label(String(localized: "Remove"), systemImage: "minus.circle")
+                }
+                .disabled(selectedItemIds.isEmpty)
+            } else {
                 Button {
                     onPlayProgram(program)
                 } label: {
                     Label("Play", systemImage: "play.fill")
                 }
-
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            if isSelecting {
+                Button(role: .destructive) {
+                    showDeleteSelectedAlert = true
+                } label: {
+                    Label(String(localized: "Delete"), systemImage: "trash")
+                }
+                .disabled(selectedItemIds.isEmpty)
+            } else {
                 Button {
                     isImporting = true
                 } label: {
@@ -54,7 +146,59 @@ struct ProgramDetailView: View {
                 }
             }
         }
-        .scoreImporter(isPresented: $isImporting, program: program)
+        ToolbarItem(placement: .topBarTrailing) {
+            if !program.items.isEmpty {
+                if isSelecting {
+                    Button {
+                        withAnimation {
+                            isSelecting = false
+                            selectedItemIds.removeAll()
+                        }
+                    } label: {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .tint)
+                    }
+                } else {
+                    Button {
+                        withAnimation { isSelecting = true }
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                            .font(.title2)
+                    }
+                }
+            }
+        }
+    }
+
+    private func toggleSelection(_ item: ProgramItem) {
+        if selectedItemIds.contains(item.id) {
+            selectedItemIds.remove(item.id)
+        } else {
+            selectedItemIds.insert(item.id)
+        }
+    }
+
+    private func removeSelectedItems() {
+        for item in program.orderedItems where selectedItemIds.contains(item.id) {
+            if let score = item.score {
+                program.removeScore(score)
+            }
+        }
+        try? modelContext.save()
+        selectedItemIds.removeAll()
+    }
+
+    private func deleteSelectedItems() {
+        for item in program.orderedItems where selectedItemIds.contains(item.id) {
+            if let score = item.score {
+                program.removeScore(score)
+                modelContext.delete(score)
+            }
+        }
+        try? modelContext.save()
+        selectedItemIds.removeAll()
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {

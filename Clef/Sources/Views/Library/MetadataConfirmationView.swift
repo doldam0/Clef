@@ -15,7 +15,6 @@ struct MetadataConfirmationView: View {
     @State private var composer: String = ""
     @State private var instruments: [String] = []
     @State private var newInstrumentText: String = ""
-    @State private var didPrefill = false
 
     var body: some View {
         NavigationStack {
@@ -95,7 +94,7 @@ struct MetadataConfirmationView: View {
             }
         }
         .onAppear {
-            prefillIfNeeded()
+            prefill()
         }
     }
 
@@ -108,13 +107,11 @@ struct MetadataConfirmationView: View {
         }
     }
 
-    private func prefillIfNeeded() {
-        guard !didPrefill else { return }
-        didPrefill = true
-
+    private func prefill() {
         title = extracted.title ?? score.title
         composer = extracted.composer ?? score.composer ?? ""
         instruments = extracted.instruments.isEmpty ? score.instruments : extracted.instruments
+        newInstrumentText = ""
     }
 
     private func addInstrument() {
