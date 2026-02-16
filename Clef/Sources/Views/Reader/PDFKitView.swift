@@ -1,5 +1,5 @@
 import SwiftUI
-import PDFKit
+@preconcurrency import PDFKit
 import PencilKit
 
 struct PDFKitView: UIViewRepresentable {
@@ -108,7 +108,9 @@ struct PDFKitView: UIViewRepresentable {
                 object: pdfView,
                 queue: .main
             ) { [weak self] _ in
-                self?.handlePageChange()
+                Task { @MainActor [weak self] in
+                    self?.handlePageChange()
+                }
             }
         }
 
@@ -157,12 +159,13 @@ struct PDFKitView: UIViewRepresentable {
 }
 
 @MainActor
-final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProvider, PKCanvasViewDelegate {
+final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProvider, PKCanvasViewDelegate, PKToolPickerObserver {
     private var canvasCache: [Int: PKCanvasView] = [:]
     private var canvasToPageIndex: [ObjectIdentifier: Int] = [:]
     private var drawingCache: [Int: PKDrawing] = [:]
     private var preRenderedPages: Set<Int> = []
-    private var toolPicker = PKToolPicker()
+    private var toolPicker: PKToolPicker!
+
     private var isDrawingEnabled: Bool
     private var onDrawingChanged: (Int, PKDrawing) -> Void
     private var drawingForPage: (Int) -> PKDrawing
@@ -176,6 +179,12 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         self.onDrawingChanged = onDrawingChanged
         self.drawingForPage = drawingForPage
         super.init()
+        configureToolPicker()
+    }
+
+    private func configureToolPicker() {
+        toolPicker = PKToolPicker()
+        toolPicker.addObserver(self)
     }
 
     func pdfView(_ view: PDFView, overlayViewFor page: PDFPage) -> UIView? {
@@ -184,10 +193,7 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
 
         if let existing = canvasCache[pageIndex] {
             existing.isUserInteractionEnabled = isDrawingEnabled
-            if isDrawingEnabled {
-                toolPicker.setVisible(true, forFirstResponder: existing)
-                existing.becomeFirstResponder()
-            }
+            updateToolPicker(for: existing)
             return existing
         }
 
@@ -207,13 +213,9 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         }
 
         toolPicker.addObserver(canvasView)
-        if isDrawingEnabled {
-            toolPicker.setVisible(true, forFirstResponder: canvasView)
-            canvasView.becomeFirstResponder()
-        }
-
         canvasCache[pageIndex] = canvasView
         canvasToPageIndex[ObjectIdentifier(canvasView)] = pageIndex
+        updateToolPicker(for: canvasView)
         return canvasView
     }
 
@@ -226,7 +228,6 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
               let document = pdfView.document
         else { return }
 
-        // Save drawing but do NOT destroy canvas or remove toolPicker observer
         let pageIndex = document.index(for: page)
         let drawing = canvasView.drawing
         drawingCache[pageIndex] = drawing
@@ -239,15 +240,9 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         guard isDrawingEnabled != enabled else { return }
         isDrawingEnabled = enabled
 
-        for (_, canvasView) in canvasCache {
+        for canvasView in canvasCache.values {
             canvasView.isUserInteractionEnabled = enabled
-            if enabled {
-                toolPicker.setVisible(true, forFirstResponder: canvasView)
-                canvasView.becomeFirstResponder()
-            } else {
-                toolPicker.setVisible(false, forFirstResponder: canvasView)
-                canvasView.resignFirstResponder()
-            }
+            updateToolPicker(for: canvasView)
         }
     }
 
@@ -287,15 +282,16 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         guard !pagesToRender.isEmpty else { return }
         DispatchQueue.global(qos: .utility).async { [pagesToRender] in
             for (page, size) in pagesToRender {
-                let _ = page.thumbnail(of: size, for: .cropBox)
+                _ = page.thumbnail(of: size, for: .cropBox)
             }
         }
     }
 
     func cleanup() {
-        for (_, canvasView) in canvasCache {
+        for canvasView in canvasCache.values {
             toolPicker.removeObserver(canvasView)
         }
+        toolPicker.removeObserver(self)
         canvasCache.removeAll()
         canvasToPageIndex.removeAll()
         drawingCache.removeAll()
@@ -309,6 +305,16 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         drawingCache[pageIndex] = drawing
         onDrawingChanged(pageIndex, drawing)
     }
+
+    private func updateToolPicker(for canvasView: PKCanvasView) {
+        if isDrawingEnabled {
+            toolPicker.setVisible(true, forFirstResponder: canvasView)
+            canvasView.becomeFirstResponder()
+        } else {
+            toolPicker.setVisible(false, forFirstResponder: canvasView)
+            canvasView.resignFirstResponder()
+        }
+    }
 }
 
 extension PDFView {
@@ -318,5 +324,28 @@ extension PDFView {
                 scrollView.panGestureRecognizer.minimumNumberOfTouches = 2
             }
         }
+    }
+}
+
+extension UIColor {
+    var hexString: String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
+    }
+
+    convenience init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+        guard hexSanitized.count == 6,
+              let hexNumber = UInt64(hexSanitized, radix: 16) else { return nil }
+
+        self.init(
+            red: CGFloat((hexNumber & 0xFF0000) >> 16) / 255,
+            green: CGFloat((hexNumber & 0x00FF00) >> 8) / 255,
+            blue: CGFloat(hexNumber & 0x0000FF) / 255,
+            alpha: 1.0
+        )
     }
 }

@@ -6,67 +6,42 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Score.updatedAt, order: .reverse) private var scores: [Score]
     @Query(sort: \Folder.name) private var folders: [Folder]
-    @State private var selectedScore: Score?
     @State private var isImporting = false
-    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
-    @State private var showThumbnails = false
-    @State private var currentPageIndex = 0
     @State private var selectedTags: Set<String> = []
+    @State private var navigationPath = NavigationPath()
 
     private var allTags: [String] {
         Array(Set(scores.flatMap(\.tags))).sorted()
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationStack(path: $navigationPath) {
             ScoreLibraryView(
                 scores: scores,
                 folders: folders,
-                selectedScore: selectedScore,
                 allTags: allTags,
                 selectedTags: $selectedTags,
                 onImport: { isImporting = true },
                 onDelete: deleteScores,
-                onScoreTapped: handleScoreTap
+                onScoreTapped: { score in
+                    navigationPath.append(score.id)
+                }
             )
-        } detail: {
-            if let score = selectedScore {
-                ScoreReaderView(
-                    score: score,
-                    currentPageIndex: $currentPageIndex,
-                    showThumbnails: $showThumbnails,
-                    columnVisibility: $columnVisibility,
-                    allTags: allTags
-                )
-                .id(score.id)
-            } else {
-                ContentUnavailableView {
-                    Label("Select Score", systemImage: "music.note.list")
-                } description: {
-                    Text("Select a score from the sidebar or import a new one.")
-                } actions: {
-                    Button("Import Score") {
-                        isImporting = true
-                    }
+            .navigationDestination(for: UUID.self) { scoreId in
+                if let score = scores.first(where: { $0.id == scoreId }) {
+                    ScoreReaderView(
+                        score: score,
+                        allTags: allTags
+                    )
                 }
             }
         }
-        .navigationSplitViewStyle(.balanced)
         .fileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
             allowsMultipleSelection: true
         ) { result in
             handleImport(result)
-        }
-    }
-
-    private func handleScoreTap(_ score: Score) {
-        if selectedScore == score {
-            showThumbnails.toggle()
-        } else {
-            selectedScore = score
-            currentPageIndex = 0
         }
     }
 

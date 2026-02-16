@@ -5,11 +5,10 @@ import PencilKit
 
 struct ScoreReaderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Bindable var score: Score
-    @Binding var currentPageIndex: Int
-    @Binding var showThumbnails: Bool
-    @Binding var columnVisibility: NavigationSplitViewVisibility
     let allTags: [String]
+    @State private var currentPageIndex = 0
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
     @State private var isPerformanceMode = false
@@ -19,19 +18,18 @@ struct ScoreReaderView: View {
     @State private var pdfDocument: PDFDocument?
     @State private var pdfViewID = UUID()
     @State private var showMetadataEditor = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
 
     var body: some View {
-        HStack(spacing: 0) {
-            if showThumbnails, let document = pdfDocument {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            if let document = pdfDocument {
                 ThumbnailSidebarView(
                     document: document,
                     currentPageIndex: $currentPageIndex
                 )
-                .frame(width: 220)
-
-                Divider()
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
             }
-
+        } detail: {
             PDFKitView(
                 pdfData: score.pdfData,
                 currentPageIndex: $currentPageIndex,
@@ -47,7 +45,54 @@ struct ScoreReaderView: View {
                 }
             )
             .id(pdfViewID)
+            .toolbarRole(.editor)
+            .navigationTitle(score.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleMenu {
+                Button {
+                    showMetadataEditor = true
+                } label: {
+                    Label("Score Info", systemImage: "info.circle")
+                }
+            }
+            .toolbar(isPerformanceMode && !showControls ? .hidden : .visible, for: .navigationBar)
+            .toolbar {
+                if !isPerformanceMode {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.backward")
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        drawingToggle
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        moreMenu
+                    }
+                }
+            }
+            .toolbar {
+                if #available(iOS 26.0, *) {
+                    ToolbarItem(placement: .secondaryAction) {
+                        if !isPerformanceMode {
+                            pageIndicator
+                        }
+                    }
+                    .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .secondaryAction) {
+                        if !isPerformanceMode {
+                            pageIndicator
+                        }
+                    }
+                }
+            }
         }
+        .navigationSplitViewStyle(.prominentDetail)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .overlay {
             if isPerformanceMode && showControls {
                 performanceOverlay
@@ -58,21 +103,6 @@ struct ScoreReaderView: View {
                 ? TapGesture().onEnded { toggleControls() }
                 : nil
         )
-        .navigationTitle(isPerformanceMode ? "" : score.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(isPerformanceMode && !showControls ? .hidden : .visible, for: .navigationBar)
-        .toolbar {
-            if !isPerformanceMode {
-                ToolbarItem(placement: .principal) {
-                    pageIndicator
-                }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    thumbnailToggle
-                    drawingToggle
-                    moreMenu
-                }
-            }
-        }
         .statusBarHidden(isPerformanceMode)
         .ignoresSafeArea(isPerformanceMode ? .all : .container, edges: .bottom)
         .onAppear {
@@ -97,7 +127,6 @@ struct ScoreReaderView: View {
                 isDrawingEnabled = false
                 withAnimation {
                     columnVisibility = .detailOnly
-                    showThumbnails = false
                 }
                 showControls = false
             } else {
@@ -148,14 +177,6 @@ struct ScoreReaderView: View {
         }
     }
 
-    private var thumbnailToggle: some View {
-        Button {
-            showThumbnails.toggle()
-        } label: {
-            Image(systemName: showThumbnails ? "sidebar.squares.left" : "sidebar.squares.leading")
-        }
-    }
-
     private var drawingToggle: some View {
         Button {
             isDrawingEnabled.toggle()
@@ -176,12 +197,6 @@ struct ScoreReaderView: View {
             .disabled(!score.isTwoPageMode)
 
             Divider()
-
-            Button {
-                showMetadataEditor = true
-            } label: {
-                Label("Score Info", systemImage: "info.circle")
-            }
 
             Button {
                 withAnimation { isPerformanceMode = true }

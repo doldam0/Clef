@@ -5,7 +5,6 @@ struct ScoreLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     let scores: [Score]
     let folders: [Folder]
-    let selectedScore: Score?
     let allTags: [String]
     @Binding var selectedTags: Set<String>
     var onImport: () -> Void
@@ -34,7 +33,6 @@ struct ScoreLibraryView: View {
                     ForEach(folders) { folder in
                         FolderRow(
                             folder: folder,
-                            selectedScore: selectedScore,
                             selectedTags: selectedTags,
                             onScoreTapped: onScoreTapped,
                             onScoreRename: { beginScoreRename($0) },
@@ -51,9 +49,6 @@ struct ScoreLibraryView: View {
                     Button { onScoreTapped(score) } label: {
                         ScoreRow(score: score, folders: folders, modelContext: modelContext, onRename: { beginScoreRename(score) }, onEdit: { editingScore = score })
                     }
-                    .listRowBackground(
-                        score == selectedScore ? Color.accentColor.opacity(0.15) : nil
-                    )
                 }
                 .onDelete { offsets in
                     let scoresToDelete = offsets.map { unfolderedScores[$0] }
@@ -202,7 +197,6 @@ struct ScoreLibraryView: View {
 
 private struct FolderRow: View {
     let folder: Folder
-    let selectedScore: Score?
     let selectedTags: Set<String>
     var onScoreTapped: (Score) -> Void
     var onScoreRename: (Score) -> Void
@@ -224,9 +218,6 @@ private struct FolderRow: View {
                 Button { onScoreTapped(score) } label: {
                     ScoreRow(score: score, folders: [], modelContext: nil, onRename: { onScoreRename(score) }, onEdit: { onScoreEdit(score) })
                 }
-                .listRowBackground(
-                    score == selectedScore ? Color.accentColor.opacity(0.15) : nil
-                )
             }
         } label: {
             Label(folder.name, systemImage: "folder")

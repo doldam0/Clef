@@ -38,32 +38,14 @@ PencilKit-based, providing the **same writing experience as Apple Notes**.
 - Lasso (`.lasso`) — select and move ink
 - Ruler (`.ruler`) — straight line guide
 
-**Custom Music Tools** (PKToolPickerCustomItem, iOS 18+):
-- Expression mark palette (f, p, ff, pp, sfz, crescendo, decrescendo, etc.)
-- Articulations (staccato, tenuto, accent, fermata, etc.)
-- Note/rest stamps (whole note–64th note, dotted notes)
-- Performance marks (trill, turn, mordent, glissando, etc.)
-- Repeat/structure marks (rehearsal mark, coda, segno, etc.)
-
-### 2. Full Apple Pencil Pro Support
+### 2. Apple Pencil Pro Support
 
 | Gesture | Action | API |
 |---|---|---|
-| **Squeeze** | Open expression mark palette | `UIPencilInteraction.Squeeze` |
 | **Barrel Roll** | Adjust marker/fountain pen angle | `UITouch.rollAngle` |
 | **Haptic Feedback** | Vibration on snap/alignment | `UICanvasFeedbackGenerator` |
 | **Hover** | Preview before writing | `UIHoverGestureRecognizer` |
 | **Double Tap** | Switch tools (respects user settings) | `UIPencilInteraction.preferredTapAction` |
-
-**Squeeze → Unified Palette Flow:**
-1. Squeeze the Apple Pencil Pro (`squeeze.phase == .ended`)
-2. Display **unified context palette** at pencil hover position (`squeeze.hoverPose?.location`)
-3. Palette top segment tabs: `[Expression Marks | Writing Tools]`
-   - **Expression Marks tab**: dynamics, articulations, note/rest stamps, etc.
-   - **Writing Tools tab**: pen/pencil/marker types, color, thickness quick switch
-4. Default tab is configurable in settings (Settings > Palette > Default Tab)
-5. Option to remember last-used tab
-6. Only activates when user system setting is `showContextualPalette` (respects system settings)
 
 ### 3. On-Device AI Music Notation Recognition
 
@@ -115,7 +97,7 @@ Automatically **detects music symbols** from scanned PDF scores. All processing 
 | **UI** | SwiftUI + UIKit bridge | PencilKit is UIKit-based, wrapped in SwiftUI |
 | **PDF Rendering** | PDFKit (`PDFView`) | Native PDF rendering |
 | **Writing** | PencilKit (`PKCanvasView`) | Per-page overlay |
-| **Tools** | PencilKit (`PKToolPicker`) | Includes custom items |
+| **Tools** | PencilKit (`PKToolPicker`) | Default system tools |
 | **AI/ML** | Core ML + Vision | YOLOv8-based OMR model |
 | **Data** | SwiftData | Score metadata, settings |
 | **Drawing Storage** | PKDrawing (Codable) | Per-page serialization |
@@ -132,14 +114,13 @@ Automatically **detects music symbols** from scanned PDF scores. All processing 
 │  ├── ScoreReaderView      (score viewer)    │
 │  │   ├── PDFPageView      (PDF rendering)   │
 │  │   ├── CanvasOverlay    (PencilKit)       │
-│  │   └── SymbolPalette    (expression marks)│
+│  │   └── ThumbnailSidebar (page navigation) │
 │  └── SettingsView         (settings)        │
 ├─────────────────────────────────────────────┤
 │  Domain Layer                                │
 │  ├── ScoreManager         (score CRUD)      │
 │  ├── AnnotationManager    (drawing mgmt)    │
-│  ├── OMREngine            (note recognition)│
-│  └── SymbolLibrary        (symbol DB)       │
+│  └── OMREngine            (note recognition)│
 ├─────────────────────────────────────────────┤
 │  Infrastructure Layer                        │
 │  ├── PDFService           (PDFKit wrapper)  │
@@ -174,9 +155,23 @@ Automatically **detects music symbols** from scanned PDF scores. All processing 
 │  ┌───────────────────────────┐  │
 │  │      PKToolPicker         │  │  ← bottom toolbar
 │  │  [pen][pencil][marker]... │  │
-│  │  [♩ notes][𝆑 symbols]    │  │  ← custom music tools
 │  └───────────────────────────┘  │
 └─────────────────────────────────┘
+```
+
+### Navigation Architecture
+
+```
+NavigationStack
+├── Root: ScoreLibraryView (main screen — grid/list)
+│   ├── Folder management (DisclosureGroup)
+│   ├── Tag filter bar (horizontal scroll chips)
+│   └── Score tap → push to reader
+│
+└── Push → ScoreReaderView
+    └── NavigationSplitView
+        ├── Sidebar: ThumbnailSidebarView (page thumbnails)
+        └── Detail: PDFKitView (PDF + PencilKit overlay)
 ```
 
 ### OMR Pipeline
@@ -236,49 +231,6 @@ class Score {
 class PageAnnotation {
     var pageIndex: Int
     var drawingData: Data       // PKDrawing serialized
-    var symbolOverlays: [SymbolOverlay]  // OMR-detected / user-added symbols
-}
-```
-
-### SymbolOverlay
-
-```swift
-struct SymbolOverlay: Codable {
-    var id: UUID
-    var type: MusicSymbolType   // notes, rests, dynamics, etc.
-    var boundingBox: CGRect     // position and size
-    var isDetected: Bool        // OMR-detected vs user-added
-    var isDeleted: Bool         // soft delete (preserves original)
-}
-```
-
-### MusicSymbolType
-
-```swift
-enum MusicSymbolType: String, Codable {
-    // Notes
-    case wholeNote, halfNote, quarterNote, eighthNote, sixteenthNote
-    case dottedHalfNote, dottedQuarterNote, dottedEighthNote
-    
-    // Rests
-    case wholeRest, halfRest, quarterRest, eighthRest, sixteenthRest
-    
-    // Clefs
-    case trebleClef, bassClef, altoClef
-    
-    // Dynamics
-    case pianissimo, piano, mezzoPiano, mezzoForte, forte, fortissimo
-    case sforzando, crescendo, decrescendo
-    
-    // Articulations
-    case staccato, tenuto, accent, fermata, marcato
-    
-    // Ornaments
-    case trill, turn, mordent, glissando
-    
-    // Structure
-    case coda, segno, rehearsalMark
-    case repeatStart, repeatEnd
 }
 ```
 
@@ -298,14 +250,14 @@ enum MusicSymbolType: String, Codable {
 - [x] Tag-based filtering
 - [x] Localization (English / Korean)
 
-### Phase 2 — Apple Pencil Pro & Custom Tools
+### Phase 2 — Navigation & UX
 
-- [ ] Apple Pencil Pro Squeeze → context palette
+- [x] iPad Preview-style navigation (library main screen → push to reader)
+- [x] NavigationSplitView page thumbnail sidebar in reader
+- [x] Two-page spread view with cover page toggle
+- [x] Performance mode (full-screen, auto-hide controls)
+- [ ] Apple Pencil Pro Squeeze integration
 - [ ] Barrel Roll support (marker, fountain pen)
-- [ ] Haptic Feedback (snap, alignment)
-- [ ] PKToolPickerCustomItem — expression mark tools
-- [ ] Symbol drag & drop placement
-- [ ] SMuFL font-based symbol rendering
 
 ### Phase 3 — On-Device AI (OMR)
 
