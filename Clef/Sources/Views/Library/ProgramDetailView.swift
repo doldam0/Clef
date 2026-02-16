@@ -1,19 +1,14 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct ProgramDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var program: Program
-    @Query(sort: \Score.title) private var allScores: [Score]
     var onScoreTapped: (Score) -> Void
     var onPlayProgram: (Program) -> Void
 
-    @State private var isShowingScorePicker = false
-
-    private var availableScores: [Score] {
-        let existingIDs = Set(program.orderedScores.map(\.id))
-        return allScores.filter { !existingIDs.contains($0.id) }
-    }
+    @State private var isImporting = false
 
     var body: some View {
         Group {
@@ -23,8 +18,8 @@ struct ProgramDetailView: View {
                 } description: {
                     Text("Add scores to this program")
                 } actions: {
-                    Button("Add Scores") {
-                        isShowingScorePicker = true
+                    Button(String(localized: "Import Score")) {
+                        isImporting = true
                     }
                 }
             } else {
@@ -53,16 +48,38 @@ struct ProgramDetailView: View {
                     Label("Play", systemImage: "play.fill")
                 }
 
-                Button("Add Scores") {
-                    isShowingScorePicker = true
+                Button {
+                    isImporting = true
+                } label: {
+                    Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
                 }
             }
         }
-        .sheet(isPresented: $isShowingScorePicker) {
-            ScorePickerSheet(availableScores: availableScores) { scores in
-                addScores(scores)
-            }
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            allowsMultipleSelection: true
+        ) { result in
+            handleImport(result)
         }
+    }
+
+    private func handleImport(_ result: Result<[URL], Error>) {
+        guard case .success(let urls) = result else { return }
+
+        for url in urls {
+            guard url.startAccessingSecurityScopedResource() else { continue }
+            defer { url.stopAccessingSecurityScopedResource() }
+
+            guard let pdfData = try? Data(contentsOf: url) else { continue }
+
+            let title = url.deletingPathExtension().lastPathComponent
+            let score = Score(title: title, pdfData: pdfData)
+            modelContext.insert(score)
+            program.appendScore(score)
+        }
+
+        try? modelContext.save()
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {
@@ -76,13 +93,6 @@ struct ProgramDetailView: View {
             if let score = item.score {
                 program.removeScore(score)
             }
-        }
-        try? modelContext.save()
-    }
-
-    private func addScores(_ scores: [Score]) {
-        for score in scores {
-            program.appendScore(score)
         }
         try? modelContext.save()
     }
@@ -165,92 +175,4 @@ private struct ScoreThumbnailView: View {
     }
 }
 
-private struct ScorePickerSheet: View {
-    let availableScores: [Score]
-    let onAdd: ([Score]) -> Void
 
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedScores: Set<UUID> = []
-    @State private var searchText = ""
-
-    private var filteredScores: [Score] {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return availableScores }
-
-        return availableScores.filter { score in
-            score.title.localizedCaseInsensitiveContains(trimmed)
-                || (score.composer?.localizedCaseInsensitiveContains(trimmed) ?? false)
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button("Cancel") {
-                    dismiss()
-                }
-
-                Spacer()
-
-                Text("Add Scores")
-                    .font(.headline)
-
-                Spacer()
-
-                Button("Add") {
-                    let selected = availableScores.filter { selectedScores.contains($0.id) }
-                    onAdd(selected)
-                    dismiss()
-                }
-                .disabled(selectedScores.isEmpty)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-
-            if filteredScores.isEmpty {
-                ContentUnavailableView {
-                    Label("No Scores", systemImage: "magnifyingglass")
-                } description: {
-                    Text("Try a different search")
-                }
-            } else {
-                List(filteredScores) { score in
-                    Button {
-                        toggleSelection(for: score)
-                    } label: {
-                        HStack(spacing: 12) {
-                            ScoreThumbnailView(score: score)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(score.title)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(1)
-
-                                Text(score.composer ?? "Unknown Composer")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: selectedScores.contains(score.id) ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(selectedScores.contains(score.id) ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                .searchable(text: $searchText, prompt: "Search scores")
-            }
-        }
-    }
-
-    private func toggleSelection(for score: Score) {
-        if selectedScores.contains(score.id) {
-            selectedScores.remove(score.id)
-        } else {
-            selectedScores.insert(score.id)
-        }
-    }
-}

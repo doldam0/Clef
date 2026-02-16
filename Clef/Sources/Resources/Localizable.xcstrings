@@ -34,6 +34,7 @@
       }
     },
     "Add Scores" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -618,6 +619,7 @@
       }
     },
     "Search scores" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -710,6 +712,7 @@
       }
     },
     "Try a different search" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
