@@ -279,6 +279,7 @@ struct ScoreLibraryView: View {
                     }
                 }
                 .padding(16)
+                .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: searchResults.map(\.id))
             }
         }
     }
@@ -295,6 +296,7 @@ struct ScoreLibraryView: View {
                     }
                 }
                 .padding(16)
+                .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: allScores.map(\.id))
             }
         }
     }
@@ -358,6 +360,7 @@ struct ScoreLibraryView: View {
                             }
                         }
                         .padding(.horizontal, 16)
+                        .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: unfolderedScores.map(\.id))
                     }
                 }
 
@@ -381,7 +384,7 @@ struct ScoreLibraryView: View {
             ScoreCardView(score: score, isSelecting: isSelecting, isSelected: selectedScoreIds.contains(score.id))
         }
         .buttonStyle(.plain)
-        .disabled(false)
+        .dragSelectFrame(id: score.id)
         .contextMenu(isSelecting ? nil : ContextMenu {
             Button {
                 editingScore = score

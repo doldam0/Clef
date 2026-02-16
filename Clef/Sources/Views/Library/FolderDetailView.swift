@@ -69,10 +69,20 @@ struct FolderDetailView: View {
                     }
 
                     if !folderScores.isEmpty {
-                        sectionView(title: !subFolders.isEmpty || !folderPrograms.isEmpty ? String(localized: "Scores") : nil) {
-                            ForEach(folderScores) { score in
-                                scoreCard(for: score)
+                        VStack(alignment: .leading, spacing: 12) {
+                            if !subFolders.isEmpty || !folderPrograms.isEmpty {
+                                Text(String(localized: "Scores"))
+                                    .font(.title3.bold())
+                                    .padding(.horizontal, 16)
                             }
+
+                            LazyVGrid(columns: gridColumns, spacing: 16) {
+                                ForEach(folderScores) { score in
+                                    scoreCard(for: score)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: folderScores.map(\.id))
                         }
                     }
                 }
@@ -298,6 +308,7 @@ struct FolderDetailView: View {
             ScoreCardView(score: score, isSelecting: isSelecting, isSelected: selectedScoreIds.contains(score.id))
         }
         .buttonStyle(.plain)
+        .dragSelectFrame(id: score.id)
         .contextMenu(isSelecting ? nil : ContextMenu {
             Button {
                 editingScore = score
