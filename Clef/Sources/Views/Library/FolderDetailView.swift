@@ -15,6 +15,11 @@ struct FolderDetailView: View {
     @State private var isSelecting = false
     @State private var selectedScoreIds: Set<UUID> = []
     @State private var showDeleteSelectedAlert = false
+    @State private var isImporting = false
+    @State private var isCreatingSubfolder = false
+    @State private var newSubfolderName = ""
+    @State private var isCreatingProgram = false
+    @State private var newProgramName = ""
 
     private var subFolders: [Folder] {
         folder.children.sorted { $0.name < $1.name }
@@ -163,7 +168,27 @@ struct FolderDetailView: View {
                     }
                 }
             } else {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button(action: { isImporting = true }) {
+                            Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
+                        }
+                        Button(action: { isCreatingSubfolder = true }) {
+                            Label(String(localized: "New Folder"), systemImage: "folder.badge.plus")
+                        }
+                        Button(action: { isCreatingProgram = true }) {
+                            Label(String(localized: "New Program"), systemImage: "music.note.list")
+                        }
+                    } label: {
+                        Label(String(localized: "Add"), systemImage: "plus")
+                    }
+                }
+
                 if !folderScores.isEmpty {
+                    if #available(iOS 26, *) {
+                        ToolbarSpacer(.fixed, placement: .primaryAction)
+                    }
+
                     ToolbarItem(placement: .primaryAction) {
                         Button {
                             withAnimation { isSelecting = true }
@@ -194,6 +219,17 @@ struct FolderDetailView: View {
         .sheet(item: $editingScore) { score in
             ScoreMetadataEditorView(score: score, existingTags: [])
         }
+        .alert(String(localized: "New Folder"), isPresented: $isCreatingSubfolder) {
+            TextField(String(localized: "Folder Name"), text: $newSubfolderName)
+            Button(String(localized: "Cancel"), role: .cancel) { newSubfolderName = "" }
+            Button(String(localized: "Create")) { createSubfolder() }
+        }
+        .alert(String(localized: "New Program"), isPresented: $isCreatingProgram) {
+            TextField(String(localized: "Program Name"), text: $newProgramName)
+            Button(String(localized: "Cancel"), role: .cancel) { newProgramName = "" }
+            Button(String(localized: "Create")) { createProgram() }
+        }
+        .scoreImporter(isPresented: $isImporting, folder: folder)
     }
 
     // MARK: - Section Layout
@@ -383,6 +419,32 @@ struct FolderDetailView: View {
         modelContext.delete(score)
         try? modelContext.save()
         deletingScore = nil
+    }
+
+    private func createSubfolder() {
+        let trimmed = newSubfolderName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            newSubfolderName = ""
+            return
+        }
+        let subfolder = Folder(name: trimmed)
+        subfolder.parent = folder
+        modelContext.insert(subfolder)
+        try? modelContext.save()
+        newSubfolderName = ""
+    }
+
+    private func createProgram() {
+        let trimmed = newProgramName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            newProgramName = ""
+            return
+        }
+        let program = Program(name: trimmed)
+        program.folder = folder
+        modelContext.insert(program)
+        try? modelContext.save()
+        newProgramName = ""
     }
 
     private func addSelectedScores(to program: Program) {

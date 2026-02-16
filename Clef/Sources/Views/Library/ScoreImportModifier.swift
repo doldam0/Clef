@@ -6,6 +6,7 @@ struct ScoreImportModifier: ViewModifier {
     @Environment(\.modelContext) private var modelContext
     @Binding var isPresented: Bool
     var program: Program?
+    var folder: Folder?
 
     @State private var isAnalyzing = false
     @State private var analysisProgress = (current: 0, total: 0)
@@ -79,6 +80,10 @@ struct ScoreImportModifier: ViewModifier {
             let score = Score(title: title, pdfData: pdfData)
             modelContext.insert(score)
 
+            if let folder {
+                score.folder = folder
+            }
+
             if let program {
                 program.appendScore(score)
             }
@@ -134,7 +139,7 @@ struct ScoreImportModifier: ViewModifier {
 }
 
 extension View {
-    func scoreImporter(isPresented: Binding<Bool>, program: Program? = nil) -> some View {
-        modifier(ScoreImportModifier(isPresented: isPresented, program: program))
+    func scoreImporter(isPresented: Binding<Bool>, program: Program? = nil, folder: Folder? = nil) -> some View {
+        modifier(ScoreImportModifier(isPresented: isPresented, program: program, folder: folder))
     }
 }
