@@ -12,6 +12,7 @@ struct PDFKitView: UIViewRepresentable {
     let onDrawingChanged: (Int, PKDrawing) -> Void
     let drawingForPage: (Int) -> PKDrawing
     var onSwipePastEnd: (() -> Void)? = nil
+    var onSwipePastStart: (() -> Void)? = nil
 
     func makeUIView(context: Context) -> PDFView {
         let pdfView = PDFView()
@@ -43,13 +44,13 @@ struct PDFKitView: UIViewRepresentable {
         } else {
             pdfView.usePageViewController(true)
 
-            if onSwipePastEnd != nil {
-                let swipeLeft = UISwipeGestureRecognizer(
+            if onSwipePastEnd != nil || onSwipePastStart != nil {
+                let pan = UIPanGestureRecognizer(
                     target: context.coordinator,
-                    action: #selector(Coordinator.handleSwipePastEnd)
+                    action: #selector(Coordinator.handleBoundaryPan(_:))
                 )
-                swipeLeft.direction = .left
-                pdfView.addGestureRecognizer(swipeLeft)
+                pan.delegate = context.coordinator
+                pdfView.addGestureRecognizer(pan)
             }
         }
 
@@ -96,11 +97,12 @@ struct PDFKitView: UIViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator: NSObject {
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var parent: PDFKitView
         weak var pdfView: PDFView?
         let overlayCoordinator: OverlayCoordinator
         private var pageObserver: NSObjectProtocol?
+        private var hasFiredBoundary = false
 
         init(parent: PDFKitView) {
             self.parent = parent
@@ -131,13 +133,38 @@ struct PDFKitView: UIViewRepresentable {
             overlayCoordinator.cleanup()
         }
 
-        @objc func handleSwipePastEnd() {
+        // MARK: - Boundary swipe detection
+
+        nonisolated func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            true
+        }
+
+        @objc func handleBoundaryPan(_ gesture: UIPanGestureRecognizer) {
+            guard gesture.state == .ended else {
+                if gesture.state == .began {
+                    hasFiredBoundary = false
+                }
+                return
+            }
+            guard !hasFiredBoundary else { return }
+
             guard let pdfView,
                   let document = pdfView.document,
                   let currentPage = pdfView.currentPage else { return }
+
             let pageIndex = document.index(for: currentPage)
-            if pageIndex >= document.pageCount - 1 {
+            let velocity = gesture.velocity(in: pdfView)
+            let threshold: CGFloat = 300
+
+            if pageIndex >= document.pageCount - 1 && velocity.x < -threshold {
+                hasFiredBoundary = true
                 parent.onSwipePastEnd?()
+            } else if pageIndex == 0 && velocity.x > threshold {
+                hasFiredBoundary = true
+                parent.onSwipePastStart?()
             }
         }
 

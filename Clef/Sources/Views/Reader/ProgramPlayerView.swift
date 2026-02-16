@@ -34,14 +34,22 @@ struct ProgramPlayerView: View {
     private func scoreReaderView(for score: Score) -> some View {
         let nextAction: (() -> Void)? = hasNext ? { advanceToNext() } : nil
         let prevAction: (() -> Void)? = hasPrevious ? { goToPrevious() } : nil
-        let swipeAction: (() -> Void)? = hasNext ? { advanceToNext() } : nil
+        let swipeEndAction: (() -> Void)? = hasNext ? { advanceToNext() } : nil
+        let swipeStartAction: (() -> Void)? = hasPrevious ? { goToPrevious() } : nil
 
         return ScoreReaderView(
             score: score,
             allTags: allTags,
-            onSwipePastEnd: swipeAction,
+            onSwipePastEnd: swipeEndAction,
+            onSwipePastStart: swipeStartAction,
             onNextScore: nextAction,
-            onPreviousScore: prevAction
+            onPreviousScore: prevAction,
+            programScores: orderedScores,
+            onSelectProgramScore: { selected in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    currentScore = selected
+                }
+            }
         )
         .id(score.id)
     }

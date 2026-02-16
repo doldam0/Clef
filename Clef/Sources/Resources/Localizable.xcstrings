@@ -225,6 +225,7 @@
       }
     },
     "End of Program" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -485,6 +486,9 @@
         }
       }
     },
+    "Previous Score" : {
+
+    },
     "Program Name" : {
       "localizations" : {
         "ko" : {
@@ -578,6 +582,7 @@
       }
     },
     "Replay" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -753,6 +758,7 @@
       }
     },
     "You reached the end of %@." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {

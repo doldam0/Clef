@@ -9,8 +9,11 @@ struct ScoreReaderView: View {
     @Bindable var score: Score
     let allTags: [String]
     var onSwipePastEnd: (() -> Void)? = nil
+    var onSwipePastStart: (() -> Void)? = nil
     var onNextScore: (() -> Void)? = nil
     var onPreviousScore: (() -> Void)? = nil
+    var programScores: [Score]? = nil
+    var onSelectProgramScore: ((Score) -> Void)? = nil
     @State private var currentPageIndex = 0
     @State private var totalPages = 0
     @State private var isDrawingEnabled = false
@@ -46,13 +49,32 @@ struct ScoreReaderView: View {
                 drawingForPage: { pageIndex in
                     loadDrawing(for: pageIndex)
                 },
-                onSwipePastEnd: onSwipePastEnd
+                onSwipePastEnd: onSwipePastEnd,
+                onSwipePastStart: onSwipePastStart
             )
             .id(pdfViewID)
             .toolbarRole(.editor)
             .navigationTitle(score.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarTitleMenu {
+                if let programScores, let onSelectProgramScore {
+                    ForEach(programScores, id: \.id) { programScore in
+                        Button {
+                            onSelectProgramScore(programScore)
+                        } label: {
+                            HStack {
+                                Text(programScore.title)
+                                if programScore.id == score.id {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                        .disabled(programScore.id == score.id)
+                    }
+
+                    Divider()
+                }
+
                 Button {
                     showMetadataEditor = true
                 } label: {
