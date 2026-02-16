@@ -457,7 +457,7 @@ struct ScoreLibraryView: View {
                             Image(systemName: "folder.fill")
                                 .font(.largeTitle)
                                 .foregroundStyle(.tint)
-                            Text("\(folder.scores.count)")
+                            Text("\(folder.totalScoreCount)")
                                 .font(.caption.bold())
                                 .foregroundStyle(.secondary)
                         }

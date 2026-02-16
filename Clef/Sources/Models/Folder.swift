@@ -22,4 +22,15 @@ final class Folder {
         self.createdAt = .now
         self.updatedAt = .now
     }
+
+    var totalScoreCount: Int {
+        var count = scores.count
+        for program in programs {
+            count += program.items.count
+        }
+        for child in children {
+            count += child.totalScoreCount
+        }
+        return count
+    }
 }
