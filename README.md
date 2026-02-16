@@ -312,6 +312,10 @@ enum MusicSymbolType: String, Codable {
 - [ ] 기호 선택/삭제/이동 UI
 - [ ] 기호 추가 (팔레트 → 드래그)
 - [ ] 전처리 최적화 (Metal Performance Shaders)
+- [ ] 악보 메타데이터 자동 감지 (조성, 박자, 작곡가, 제목 등)
+  - PDF 첫 페이지 OCR → 제목/작곡가 추출 (Vision `VNRecognizeTextRequest`)
+  - OMR 결과에서 조표/박자표 자동 인식 → `key`, `timeSignature` 자동 채우기
+  - 사용자 확인 후 메타데이터 반영 (자동 저장 아님, 제안 UI)
 
 ### Phase 4 — 완성도
 
