@@ -137,6 +137,7 @@ struct ScoreReaderView: View {
         .navigationSplitViewStyle(.prominentDetail)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .overlay {
             if isPerformanceMode && showControls {
                 performanceOverlay
