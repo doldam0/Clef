@@ -261,6 +261,18 @@ struct BrowseCatalogView: View {
             }
         } else {
             ToolbarItem(placement: .primaryAction) {
+                Button {
+                    withAnimation { isSelecting = true }
+                } label: {
+                    Text(String(localized: "Select"))
+                }
+            }
+
+            if #available(iOS 26, *) {
+                ToolbarSpacer(.fixed, placement: .primaryAction)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: { isImporting = true }) {
                         Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
@@ -273,18 +285,6 @@ struct BrowseCatalogView: View {
                     }
                 } label: {
                     Label(String(localized: "Add"), systemImage: "plus")
-                }
-            }
-
-            if #available(iOS 26, *) {
-                ToolbarSpacer(.fixed, placement: .primaryAction)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    withAnimation { isSelecting = true }
-                } label: {
-                    Label(String(localized: "Select"), systemImage: "checkmark.circle")
                 }
             }
         }

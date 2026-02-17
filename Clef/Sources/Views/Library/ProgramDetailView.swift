@@ -140,39 +140,40 @@ struct ProgramDetailView: View {
                     Label(String(localized: "Delete"), systemImage: "trash")
                 }
                 .disabled(selectedItemIds.isEmpty)
-            } else {
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            if isSelecting {
                 Button {
-                    showScorePicker = true
+                    withAnimation {
+                        isSelecting = false
+                        selectedItemIds.removeAll()
+                    }
                 } label: {
-                    Label(String(localized: "Add Scores"), systemImage: "plus")
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, .tint)
+                }
+            } else if !program.items.isEmpty {
+                Button {
+                    withAnimation { isSelecting = true }
+                } label: {
+                    Text(String(localized: "Select"))
                 }
             }
         }
-        if !program.items.isEmpty && !isSelecting {
+        if !isSelecting {
             if #available(iOS 26, *) {
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            if !program.items.isEmpty {
-                if isSelecting {
-                    Button {
-                        withAnimation {
-                            isSelecting = false
-                            selectedItemIds.removeAll()
-                        }
-                    } label: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .tint)
-                    }
-                } else {
-                    Button {
-                        withAnimation { isSelecting = true }
-                    } label: {
-                        Label(String(localized: "Select"), systemImage: "checkmark.circle")
-                    }
+            if !isSelecting {
+                Button {
+                    showScorePicker = true
+                } label: {
+                    Label(String(localized: "Add Scores"), systemImage: "plus")
                 }
             }
         }
