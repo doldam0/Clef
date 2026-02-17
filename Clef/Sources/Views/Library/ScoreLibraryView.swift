@@ -34,22 +34,11 @@ struct ScoreLibraryView: View {
 
     @State private var selectedTab: LibraryTab = .recent
     @State private var searchText = ""
-    @State private var isCreatingFolder = false
-    @State private var newFolderName = ""
-    @State private var isCreatingProgram = false
-    @State private var newProgramName = ""
-    @State private var renamingScore: Score?
-    @State private var scoreRenameText = ""
-    @State private var renamingFolder: Folder?
-    @State private var folderRenameText = ""
-    @State private var renamingProgram: Program?
-    @State private var programRenameText = ""
-    @State private var editingScore: Score?
-    @State private var deletingScore: Score?
     @State private var isSelecting = false
     @State private var selectedScoreIds: Set<UUID> = []
     @State private var showDeleteSelectedAlert = false
-    @State private var moveToFolderScores: [Score]?
+    @State private var editingScore: Score?
+    @State private var deletingScore: Score?
 
     private var isSearchActive: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -69,10 +58,6 @@ struct ScoreLibraryView: View {
         }
     }
 
-    private var unfolderedScores: [Score] {
-        allScores.filter { $0.folder == nil }
-    }
-
     private let gridColumns = [
         GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16),
     ]
@@ -84,7 +69,14 @@ struct ScoreLibraryView: View {
             } else if selectedTab == .recent {
                 recentTab
             } else {
-                browseTab
+                BrowseCatalogView(
+                    folder: nil,
+                    onScoreTapped: onScoreTapped,
+                    onProgramTapped: onProgramTapped,
+                    onFolderTapped: onFolderTapped,
+                    isSelecting: $isSelecting,
+                    selectedScoreIds: $selectedScoreIds
+                )
             }
 
             if !isSearchActive {
@@ -94,119 +86,9 @@ struct ScoreLibraryView: View {
         .navigationTitle(String(localized: "Library"))
         .searchable(text: $searchText, prompt: String(localized: "Search Scores"))
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                if isSelecting {
-                    Button(allSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
-                        withAnimation {
-                            if allSelected {
-                                selectedScoreIds.removeAll()
-                            } else {
-                                selectedScoreIds = Set(visibleScores.map(\.id))
-                            }
-                        }
-                    }
-                }
+            if selectedTab != .browse || isSearchActive {
+                recentToolbar
             }
-            if isSelecting {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if !folders.isEmpty {
-                        Menu {
-                            ForEach(folders) { folder in
-                                Button(folder.name) {
-                                    moveSelectedScores(to: folder)
-                                }
-                            }
-                            Divider()
-                            Button(String(localized: "Remove from Folder")) {
-                                moveSelectedScores(to: nil)
-                            }
-                        } label: {
-                            Label(String(localized: "Move"), systemImage: "folder")
-                        }
-                        .disabled(selectedScoreIds.isEmpty)
-                    }
-
-                    if !programs.isEmpty {
-                        Menu {
-                            ForEach(programs) { program in
-                                Button(program.name) {
-                                    addSelectedScores(to: program)
-                                }
-                            }
-                        } label: {
-                            Label(String(localized: "Add to Program"), systemImage: "music.note.list")
-                        }
-                        .disabled(selectedScoreIds.isEmpty)
-                    }
-
-                    Button(role: .destructive) {
-                        showDeleteSelectedAlert = true
-                    } label: {
-                        Label(String(localized: "Delete"), systemImage: "trash")
-                    }
-                    .disabled(selectedScoreIds.isEmpty)
-
-                    Button {
-                        withAnimation {
-                            isSelecting = false
-                            selectedScoreIds.removeAll()
-                        }
-                    } label: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .tint)
-                    }
-                }
-            } else {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button(action: onImport) {
-                            Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
-                        }
-                        Button(action: { isCreatingFolder = true }) {
-                            Label(String(localized: "New Folder"), systemImage: "folder.badge.plus")
-                        }
-                        Button(action: { isCreatingProgram = true }) {
-                            Label(String(localized: "New Program"), systemImage: "music.note.list")
-                        }
-                    } label: {
-                        Label(String(localized: "Add"), systemImage: "plus")
-                    }
-                }
-
-                if !allScores.isEmpty {
-                    if #available(iOS 26, *) {
-                        ToolbarSpacer(.fixed, placement: .primaryAction)
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            withAnimation { isSelecting = true }
-                        } label: {
-                            Label(String(localized: "Select"), systemImage: "checkmark.circle")
-                        }
-                    }
-                }
-            }
-        }
-        .alert(String(localized: "New Folder"), isPresented: $isCreatingFolder) {
-            TextField(String(localized: "Folder Name"), text: $newFolderName)
-            Button(String(localized: "Cancel"), role: .cancel) { newFolderName = "" }
-            Button(String(localized: "Create")) { createFolder() }
-        }
-        .alert(String(localized: "New Program"), isPresented: $isCreatingProgram) {
-            TextField(String(localized: "Program Name"), text: $newProgramName)
-            Button(String(localized: "Cancel"), role: .cancel) { newProgramName = "" }
-            Button(String(localized: "Create")) { createProgram() }
-        }
-        .alert(String(localized: "Rename Program"), isPresented: .init(
-            get: { renamingProgram != nil },
-            set: { if !$0 { renamingProgram = nil } }
-        )) {
-            TextField(String(localized: "Program Name"), text: $programRenameText)
-            Button(String(localized: "Cancel"), role: .cancel) { renamingProgram = nil }
-            Button(String(localized: "Rename")) { commitProgramRename() }
         }
         .alert(String(localized: "Delete Score"), isPresented: .init(
             get: { deletingScore != nil },
@@ -230,7 +112,143 @@ struct ScoreLibraryView: View {
         }
     }
 
+    @ToolbarContentBuilder
+    private var recentToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if isSelecting {
+                Button(allSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
+                    withAnimation {
+                        if allSelected {
+                            selectedScoreIds.removeAll()
+                        } else {
+                            selectedScoreIds = Set(visibleScores.map(\.id))
+                        }
+                    }
+                }
+            }
+        }
+        if isSelecting {
+            ToolbarItemGroup(placement: .primaryAction) {
+                if !folders.isEmpty {
+                    Menu {
+                        ForEach(folders) { folder in
+                            Button(folder.name) {
+                                moveSelectedScores(to: folder)
+                            }
+                        }
+                        Divider()
+                        Button(String(localized: "Remove from Folder")) {
+                            moveSelectedScores(to: nil)
+                        }
+                    } label: {
+                        Label(String(localized: "Move"), systemImage: "folder")
+                    }
+                    .disabled(selectedScoreIds.isEmpty)
+                }
+
+                if !programs.isEmpty {
+                    Menu {
+                        ForEach(programs) { program in
+                            Button(program.name) {
+                                addSelectedScores(to: program)
+                            }
+                        }
+                    } label: {
+                        Label(String(localized: "Add to Program"), systemImage: "music.note.list")
+                    }
+                    .disabled(selectedScoreIds.isEmpty)
+                }
+
+                Button(role: .destructive) {
+                    showDeleteSelectedAlert = true
+                } label: {
+                    Label(String(localized: "Delete"), systemImage: "trash")
+                }
+                .disabled(selectedScoreIds.isEmpty)
+
+                Button {
+                    withAnimation {
+                        isSelecting = false
+                        selectedScoreIds.removeAll()
+                    }
+                } label: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, .tint)
+                }
+            }
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button(action: onImport) {
+                        Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
+                    }
+                } label: {
+                    Label(String(localized: "Add"), systemImage: "plus")
+                }
+            }
+
+            if !allScores.isEmpty {
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation { isSelecting = true }
+                    } label: {
+                        Label(String(localized: "Select"), systemImage: "checkmark.circle")
+                    }
+                }
+            }
+        }
+    }
+
     private var tabBar: some View {
+        Group {
+            if #available(iOS 26, *) {
+                glassTabBar
+            } else {
+                legacyTabBar
+            }
+        }
+    }
+
+    @available(iOS 26, *)
+    private var glassTabBar: some View {
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 8) {
+                ForEach(LibraryTab.allCases) { tab in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedTab = tab
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: tab.icon)
+                                .font(.subheadline)
+                            Text(tab.label)
+                                .font(.subheadline.weight(.medium))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
+                    .glassEffect(
+                        selectedTab == tab
+                            ? .regular.interactive()
+                            : .clear.interactive(),
+                        in: .capsule
+                    )
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var legacyTabBar: some View {
         HStack(spacing: 0) {
             Spacer()
             ForEach(LibraryTab.allCases) { tab in
@@ -301,78 +319,6 @@ struct ScoreLibraryView: View {
         }
     }
 
-    private var browseTab: some View {
-        browseCatalogView
-    }
-
-    private var rootFolders: [Folder] {
-        folders.filter { $0.parent == nil }
-    }
-
-    private var rootPrograms: [Program] {
-        programs.filter { $0.folder == nil }
-    }
-
-    private var browseCatalogView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                if !rootFolders.isEmpty || true {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "Folders"))
-                            .font(.title3.bold())
-                            .padding(.horizontal, 16)
-
-                        LazyVGrid(columns: gridColumns, spacing: 16) {
-                            ForEach(rootFolders) { folder in
-                                folderCard(for: folder)
-                            }
-                            newFolderCard
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                }
-
-                if !rootPrograms.isEmpty || true {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "Programs"))
-                            .font(.title3.bold())
-                            .padding(.horizontal, 16)
-
-                        LazyVGrid(columns: gridColumns, spacing: 16) {
-                            ForEach(rootPrograms) { program in
-                                programCard(for: program)
-                            }
-                            newProgramCard
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                }
-
-                if !unfolderedScores.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "Uncategorized"))
-                            .font(.title3.bold())
-                            .padding(.horizontal, 16)
-
-                        LazyVGrid(columns: gridColumns, spacing: 16) {
-                            ForEach(unfolderedScores) { score in
-                                scoreCard(for: score)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: unfolderedScores.map(\.id))
-                    }
-                }
-
-                if rootFolders.isEmpty && rootPrograms.isEmpty && unfolderedScores.isEmpty {
-                    emptyLibraryView
-                        .padding(.top, 40)
-                }
-            }
-            .padding(.vertical, 16)
-        }
-    }
-
     private func scoreCard(for score: Score) -> some View {
         Button {
             if isSelecting {
@@ -385,211 +331,12 @@ struct ScoreLibraryView: View {
         }
         .buttonStyle(.plain)
         .dragSelectFrame(id: score.id)
-        .contextMenu(isSelecting ? nil : ContextMenu {
-            Button {
-                editingScore = score
-            } label: {
-                Label(String(localized: "Edit Info"), systemImage: "info.circle")
-            }
-
-            Button {
-                beginScoreRename(score)
-            } label: {
-                Label(String(localized: "Rename"), systemImage: "pencil")
-            }
-
-            Button {
-                score.isFavorite.toggle()
-                score.updatedAt = .now
-                try? modelContext.save()
-            } label: {
-                Label(
-                    score.isFavorite
-                        ? String(localized: "Unfavorite")
-                        : String(localized: "Favorite"),
-                    systemImage: score.isFavorite ? "heart.slash" : "heart"
-                )
-            }
-
-            if !folders.isEmpty {
-                Menu {
-                    ForEach(folders) { folder in
-                        Button(folder.name) {
-                            score.folder = folder
-                            score.updatedAt = .now
-                            try? modelContext.save()
-                        }
-                    }
-                    if score.folder != nil {
-                        Divider()
-                        Button(String(localized: "Remove from Folder")) {
-                            score.folder = nil
-                            score.updatedAt = .now
-                            try? modelContext.save()
-                        }
-                    }
-                } label: {
-                    Label(String(localized: "Move to Folder"), systemImage: "folder")
-                }
-            }
-
-            if !programs.isEmpty {
-                Menu {
-                    ForEach(programs) { program in
-                        Button(program.name) {
-                            program.appendScore(score)
-                            try? modelContext.save()
-                        }
-                    }
-                } label: {
-                    Label(String(localized: "Add to Program"), systemImage: "music.note.list")
-                }
-            }
-
-            Divider()
-
-            Button(role: .destructive) {
-                deletingScore = score
-            } label: {
-                Label(String(localized: "Delete"), systemImage: "trash")
-            }
-        })
-    }
-
-    private func folderCard(for folder: Folder) -> some View {
-        Button {
-            onFolderTapped(folder)
-        } label: {
-            VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.tint.opacity(0.1))
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .overlay {
-                        VStack(spacing: 8) {
-                            Image(systemName: "folder.fill")
-                                .font(.largeTitle)
-                                .foregroundStyle(.tint)
-                            Text("\(folder.totalScoreCount)")
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                Text(folder.name)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-            }
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button {
-                beginFolderRename(folder)
-            } label: {
-                Label(String(localized: "Rename"), systemImage: "pencil")
-            }
-
-            Divider()
-
-            Button(role: .destructive) {
-                deleteFolder(folder)
-            } label: {
-                Label(String(localized: "Delete"), systemImage: "trash")
-            }
-        }
-    }
-
-    private func programCard(for program: Program) -> some View {
-        Button {
-            onProgramTapped(program)
-        } label: {
-            VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.orange.opacity(0.1))
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .overlay {
-                        VStack(spacing: 8) {
-                            Image(systemName: "music.note.list")
-                                .font(.largeTitle)
-                                .foregroundStyle(.orange)
-                            Text("\(program.items.count)")
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                Text(program.name)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-            }
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button {
-                beginProgramRename(program)
-            } label: {
-                Label(String(localized: "Rename"), systemImage: "pencil")
-            }
-
-            Divider()
-
-            Button(role: .destructive) {
-                deleteProgram(program)
-            } label: {
-                Label(String(localized: "Delete"), systemImage: "trash")
-            }
-        }
-    }
-
-    private var newFolderCard: some View {
-        Button { isCreatingFolder = true } label: {
-            VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
-                    .foregroundStyle(.tertiary)
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .overlay {
-                        VStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
-                            Text(String(localized: "New Folder"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                Text(" ")
-                    .font(.headline)
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var newProgramCard: some View {
-        Button { isCreatingProgram = true } label: {
-            VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
-                    .foregroundStyle(.tertiary)
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .overlay {
-                        VStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
-                            Text(String(localized: "New Program"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                Text(" ")
-                    .font(.headline)
-            }
-        }
-        .buttonStyle(.plain)
+        .scoreContextMenu(
+            score: score,
+            isSelecting: isSelecting,
+            onEdit: { editingScore = $0 },
+            onDelete: { deletingScore = $0 }
+        )
     }
 
     private var emptyLibraryView: some View {
@@ -603,104 +350,6 @@ struct ScoreLibraryView: View {
             }
             .buttonStyle(.borderedProminent)
         }
-    }
-
-    private func createFolder() {
-        let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else {
-            newFolderName = ""
-            return
-        }
-        let folder = Folder(name: trimmed)
-        modelContext.insert(folder)
-        try? modelContext.save()
-        newFolderName = ""
-    }
-
-    private func createProgram() {
-        let trimmed = newProgramName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else {
-            newProgramName = ""
-            return
-        }
-        let program = Program(name: trimmed)
-        modelContext.insert(program)
-        try? modelContext.save()
-        newProgramName = ""
-    }
-
-    private func beginScoreRename(_ score: Score) {
-        scoreRenameText = score.title
-        renamingScore = score
-    }
-
-    private func commitScoreRename() {
-        guard let score = renamingScore,
-              !scoreRenameText.trimmingCharacters(in: .whitespaces).isEmpty
-        else {
-            renamingScore = nil
-            return
-        }
-        score.title = scoreRenameText.trimmingCharacters(in: .whitespaces)
-        score.updatedAt = .now
-        try? modelContext.save()
-        renamingScore = nil
-    }
-
-    private func beginFolderRename(_ folder: Folder) {
-        folderRenameText = folder.name
-        renamingFolder = folder
-    }
-
-    private func commitFolderRename() {
-        guard let folder = renamingFolder,
-              !folderRenameText.trimmingCharacters(in: .whitespaces).isEmpty
-        else {
-            renamingFolder = nil
-            return
-        }
-        folder.name = folderRenameText.trimmingCharacters(in: .whitespaces)
-        folder.updatedAt = .now
-        try? modelContext.save()
-        renamingFolder = nil
-    }
-
-    private func beginProgramRename(_ program: Program) {
-        programRenameText = program.name
-        renamingProgram = program
-    }
-
-    private func commitProgramRename() {
-        guard let program = renamingProgram,
-              !programRenameText.trimmingCharacters(in: .whitespaces).isEmpty
-        else {
-            renamingProgram = nil
-            return
-        }
-        program.name = programRenameText.trimmingCharacters(in: .whitespaces)
-        program.updatedAt = .now
-        try? modelContext.save()
-        renamingProgram = nil
-    }
-
-    private func deleteFolder(_ folder: Folder) {
-        for score in folder.scores {
-            score.folder = nil
-        }
-        modelContext.delete(folder)
-        try? modelContext.save()
-    }
-
-    private func deleteProgram(_ program: Program) {
-        modelContext.delete(program)
-        try? modelContext.save()
-    }
-
-    private func confirmDeleteScore() {
-        guard let score = deletingScore else { return }
-        modelContext.delete(score)
-        try? modelContext.save()
-        deletingScore = nil
     }
 
     private var visibleScores: [Score] {
@@ -744,5 +393,12 @@ struct ScoreLibraryView: View {
         }
         try? modelContext.save()
         selectedScoreIds.removeAll()
+    }
+
+    private func confirmDeleteScore() {
+        guard let score = deletingScore else { return }
+        modelContext.delete(score)
+        try? modelContext.save()
+        deletingScore = nil
     }
 }
