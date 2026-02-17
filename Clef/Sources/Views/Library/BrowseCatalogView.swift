@@ -23,7 +23,6 @@ struct BrowseCatalogView: View {
     @State private var editingScore: Score?
     @State private var deletingScore: Score?
     @State private var showDeleteSelectedAlert = false
-    @State private var isSearchFieldPresented = false
     @State private var newFolderName = ""
     @State private var newProgramName = ""
     @State private var renamingFolder: Folder?
@@ -155,15 +154,9 @@ struct BrowseCatalogView: View {
             contentView
                 .searchable(
                     text: $searchText,
-                    isPresented: $isSearchFieldPresented,
-                    placement: .navigationBarDrawer(displayMode: .automatic),
+                    placement: .toolbar,
                     prompt: String(localized: "Search Scores")
                 )
-                .onChange(of: isSearchFieldPresented) { _, newValue in
-                    if !newValue {
-                        searchText = ""
-                    }
-                }
         } else {
             contentView
         }
