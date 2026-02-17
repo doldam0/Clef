@@ -120,15 +120,20 @@ private struct FolderDestinationView: View {
     let onScoreTapped: (Score) -> Void
     let onProgramTapped: (Program) -> Void
     let onFolderTapped: (Folder) -> Void
+    @State private var isSelecting = false
+    @State private var selectedScoreIds: Set<UUID> = []
 
     var body: some View {
         if let folder = folders.first(where: { $0.id == folderId }) {
-            FolderDetailView(
+            BrowseCatalogView(
                 folder: folder,
                 onScoreTapped: onScoreTapped,
                 onProgramTapped: onProgramTapped,
-                onFolderTapped: onFolderTapped
+                onFolderTapped: onFolderTapped,
+                isSelecting: $isSelecting,
+                selectedScoreIds: $selectedScoreIds
             )
+            .navigationTitle(folder.name)
         } else {
             ContentUnavailableView(
                 "Folder Not Found",
