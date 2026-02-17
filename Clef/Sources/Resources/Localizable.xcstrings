@@ -23,6 +23,16 @@
         }
       }
     },
+    "Add (%lld)" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가 (%lld)"
+          }
+        }
+      }
+    },
     "Add at least one score to play this program." : {
       "localizations" : {
         "ko" : {
