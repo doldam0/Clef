@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-private enum LibraryTab: Hashable {
+enum LibraryTab: Hashable {
     case recent
     case browse
 }
@@ -11,18 +11,21 @@ struct ScoreLibraryView: View {
     @Query(sort: \Score.updatedAt, order: .reverse) private var allScores: [Score]
     @Query(sort: \Folder.name) private var folders: [Folder]
     @Query(sort: \Program.updatedAt, order: .reverse) private var programs: [Program]
+    let tab: LibraryTab
+    @Binding var searchText: String
     var onImport: () -> Void
     var onScoreTapped: (Score) -> Void
     var onProgramTapped: (Program) -> Void
     var onFolderTapped: (Folder) -> Void
 
-    @State private var selectedTab: LibraryTab = .recent
-    @State private var searchText = ""
     @State private var isSelecting = false
     @State private var selectedScoreIds: Set<UUID> = []
     @State private var showDeleteSelectedAlert = false
     @State private var editingScore: Score?
     @State private var deletingScore: Score?
+    @State private var browseIsImporting = false
+    @State private var browseIsCreatingFolder = false
+    @State private var browseIsCreatingProgram = false
 
     private var isSearchActive: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -42,6 +45,14 @@ struct ScoreLibraryView: View {
         }
     }
 
+    private var selectableScores: [Score] {
+        if isSearchActive { return searchResults }
+        switch tab {
+        case .recent: return allScores
+        case .browse: return allScores.filter { $0.folder == nil }
+        }
+    }
+
     private let gridColumns = [
         GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16),
     ]
@@ -51,29 +62,54 @@ struct ScoreLibraryView: View {
             if isSearchActive {
                 searchResultsGrid
             } else {
-                TabView(selection: $selectedTab) {
-                    Tab(String(localized: "Recent"), systemImage: "clock", value: .recent) {
-                        recentTab
-                    }
-                    Tab(String(localized: "Browse"), systemImage: "folder", value: .browse) {
-                        BrowseCatalogView(
-                            folder: nil,
-                            onScoreTapped: onScoreTapped,
-                            onProgramTapped: onProgramTapped,
-                            onFolderTapped: onFolderTapped,
-                            isSelecting: $isSelecting,
-                            selectedScoreIds: $selectedScoreIds
-                        )
-                    }
+                switch tab {
+                case .recent:
+                    RecentScoresView(
+                        onScoreTapped: onScoreTapped,
+                        onImport: onImport,
+                        isSelecting: $isSelecting,
+                        selectedScoreIds: $selectedScoreIds,
+                        editingScore: $editingScore,
+                        deletingScore: $deletingScore
+                    )
+                case .browse:
+                    BrowseCatalogView(
+                        folder: nil,
+                        onScoreTapped: onScoreTapped,
+                        onProgramTapped: onProgramTapped,
+                        onFolderTapped: onFolderTapped,
+                        isSelecting: $isSelecting,
+                        selectedScoreIds: $selectedScoreIds,
+                        isImporting: $browseIsImporting,
+                        isCreatingFolder: $browseIsCreatingFolder,
+                        isCreatingProgram: $browseIsCreatingProgram,
+                        showsToolbar: false
+                    )
                 }
             }
         }
         .navigationTitle(String(localized: "Library"))
-        .searchable(text: $searchText, prompt: String(localized: "Search Scores"))
+        .searchable(text: $searchText, placement: .toolbar, prompt: String(localized: "Search Scores"))
         .toolbar {
-            if selectedTab != .browse || isSearchActive {
-                recentToolbar
-            }
+            LibraryToolbar(
+                isSelecting: $isSelecting,
+                selectedScoreIds: $selectedScoreIds,
+                showDeleteSelectedAlert: $showDeleteSelectedAlert,
+                selectableScores: selectableScores,
+                folders: folders,
+                programs: programs,
+                onImport: {
+                    if tab == .browse && !isSearchActive {
+                        browseIsImporting = true
+                    } else {
+                        onImport()
+                    }
+                },
+                onCreateFolder: { browseIsCreatingFolder = true },
+                onCreateProgram: { browseIsCreatingProgram = true },
+                onMoveToFolder: { moveSelectedScores(to: $0) },
+                onAddToProgram: { addSelectedScores(to: $0) }
+            )
         }
         .alert(String(localized: "Delete Score"), isPresented: .init(
             get: { deletingScore != nil },
@@ -95,100 +131,10 @@ struct ScoreLibraryView: View {
         } message: {
             Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
         }
+        .scoreImporter(isPresented: $browseIsImporting)
     }
 
-    @ToolbarContentBuilder
-    private var recentToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            if isSelecting {
-                Button(allSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
-                    withAnimation {
-                        if allSelected {
-                            selectedScoreIds.removeAll()
-                        } else {
-                            selectedScoreIds = Set(visibleScores.map(\.id))
-                        }
-                    }
-                }
-            }
-        }
-        if isSelecting {
-            ToolbarItemGroup(placement: .primaryAction) {
-                if !folders.isEmpty {
-                    Menu {
-                        ForEach(folders) { folder in
-                            Button(folder.name) {
-                                moveSelectedScores(to: folder)
-                            }
-                        }
-                        Divider()
-                        Button(String(localized: "Remove from Folder")) {
-                            moveSelectedScores(to: nil)
-                        }
-                    } label: {
-                        Label(String(localized: "Move"), systemImage: "folder")
-                    }
-                    .disabled(selectedScoreIds.isEmpty)
-                }
-
-                if !programs.isEmpty {
-                    Menu {
-                        ForEach(programs) { program in
-                            Button(program.name) {
-                                addSelectedScores(to: program)
-                            }
-                        }
-                    } label: {
-                        Label(String(localized: "Add to Program"), systemImage: "music.note.list")
-                    }
-                    .disabled(selectedScoreIds.isEmpty)
-                }
-
-                Button(role: .destructive) {
-                    showDeleteSelectedAlert = true
-                } label: {
-                    Label(String(localized: "Delete"), systemImage: "trash")
-                }
-                .disabled(selectedScoreIds.isEmpty)
-
-                Button {
-                    withAnimation {
-                        isSelecting = false
-                        selectedScoreIds.removeAll()
-                    }
-                } label: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, .tint)
-                }
-            }
-        } else {
-            if !allScores.isEmpty {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        withAnimation { isSelecting = true }
-                    } label: {
-                        Text(String(localized: "Select"))
-                    }
-                }
-
-                if #available(iOS 26, *) {
-                    ToolbarSpacer(.fixed, placement: .primaryAction)
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button(action: onImport) {
-                        Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
-                    }
-                } label: {
-                    Label(String(localized: "Add"), systemImage: "plus")
-                }
-            }
-        }
-    }
+    // MARK: - Content
 
     private var searchResultsGrid: some View {
         ScrollView {
@@ -207,22 +153,7 @@ struct ScoreLibraryView: View {
         }
     }
 
-    private var recentTab: some View {
-        ScrollView {
-            if allScores.isEmpty {
-                emptyLibraryView
-                    .padding(.top, 60)
-            } else {
-                LazyVGrid(columns: gridColumns, spacing: 16) {
-                    ForEach(allScores) { score in
-                        scoreCard(for: score)
-                    }
-                }
-                .padding(16)
-                .dragToSelect(selectedIds: $selectedScoreIds, isSelecting: isSelecting, orderedIds: allScores.map(\.id))
-            }
-        }
-    }
+    // MARK: - Components
 
     private func scoreCard(for score: Score) -> some View {
         Button {
@@ -244,28 +175,7 @@ struct ScoreLibraryView: View {
         )
     }
 
-    private var emptyLibraryView: some View {
-        ContentUnavailableView {
-            Label(String(localized: "No Scores"), systemImage: "music.note")
-        } description: {
-            Text(String(localized: "Import PDF sheet music to get started"))
-        } actions: {
-            Button(action: onImport) {
-                Text(String(localized: "Import Score"))
-            }
-            .buttonStyle(.borderedProminent)
-        }
-    }
-
-    private var visibleScores: [Score] {
-        if isSearchActive { return searchResults }
-        return allScores
-    }
-
-    private var allSelected: Bool {
-        let visible = visibleScores
-        return !visible.isEmpty && selectedScoreIds.count == visible.count
-    }
+    // MARK: - Actions
 
     private func toggleSelection(_ score: Score) {
         if selectedScoreIds.contains(score.id) {

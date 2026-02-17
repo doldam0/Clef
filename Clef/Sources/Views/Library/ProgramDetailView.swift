@@ -124,12 +124,6 @@ struct ProgramDetailView: View {
                     Label(String(localized: "Remove"), systemImage: "minus.circle")
                 }
                 .disabled(selectedItemIds.isEmpty)
-            } else {
-                Button {
-                    onPlayProgram(program)
-                } label: {
-                    Label("Play", systemImage: "play.fill")
-                }
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
@@ -174,6 +168,15 @@ struct ProgramDetailView: View {
                     showScorePicker = true
                 } label: {
                     Label(String(localized: "Add Scores"), systemImage: "plus")
+                }
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            if !isSelecting {
+                Button {
+                    onPlayProgram(program)
+                } label: {
+                    Label("Play", systemImage: "play.fill")
                 }
             }
         }

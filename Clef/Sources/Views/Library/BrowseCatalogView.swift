@@ -14,14 +14,17 @@ struct BrowseCatalogView: View {
 
     @Binding var isSelecting: Bool
     @Binding var selectedScoreIds: Set<UUID>
+    @Binding var isImporting: Bool
+    @Binding var isCreatingFolder: Bool
+    @Binding var isCreatingProgram: Bool
+    var showsToolbar: Bool = true
 
+    @State private var searchText = ""
     @State private var editingScore: Score?
     @State private var deletingScore: Score?
     @State private var showDeleteSelectedAlert = false
-    @State private var isImporting = false
-    @State private var isCreatingFolder = false
+    @State private var isSearchFieldPresented = false
     @State private var newFolderName = ""
-    @State private var isCreatingProgram = false
     @State private var newProgramName = ""
     @State private var renamingFolder: Folder?
     @State private var folderRenameText = ""
@@ -49,6 +52,24 @@ struct BrowseCatalogView: View {
         return allScores.filter { $0.folder == nil }
     }
 
+    private var isSearchActive: Bool {
+        showsToolbar && !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var searchResults: [Score] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !query.isEmpty else { return allScores }
+        return allScores.filter { score in
+            score.title.localizedCaseInsensitiveContains(query)
+                || (score.composer?.localizedCaseInsensitiveContains(query) ?? false)
+                || score.tags.contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
+    private var selectableScores: [Score] {
+        isSearchActive ? searchResults : visibleScores
+    }
+
     private var allTags: [String] {
         Array(Set(allScores.flatMap(\.tags))).sorted()
     }
@@ -58,6 +79,127 @@ struct BrowseCatalogView: View {
     ]
 
     var body: some View {
+        mainContent
+            .toolbar {
+                if showsToolbar {
+                    LibraryToolbar(
+                        isSelecting: $isSelecting,
+                        selectedScoreIds: $selectedScoreIds,
+                        showDeleteSelectedAlert: $showDeleteSelectedAlert,
+                        selectableScores: selectableScores,
+                        folders: allFolders,
+                        programs: allPrograms,
+                        currentFolder: folder,
+                        onImport: { isImporting = true },
+                        onCreateFolder: { isCreatingFolder = true },
+                        onCreateProgram: { isCreatingProgram = true },
+                        onMoveToFolder: { moveSelectedScores(to: $0) },
+                        onAddToProgram: { addSelectedScores(to: $0) }
+                    )
+                }
+            }
+            .alert(String(localized: "Delete Score"), isPresented: .init(
+                get: { deletingScore != nil },
+                set: { if !$0 { deletingScore = nil } }
+            )) {
+                Button(String(localized: "Cancel"), role: .cancel) { deletingScore = nil }
+                Button(String(localized: "Delete"), role: .destructive) { confirmDeleteScore() }
+            } message: {
+                if let score = deletingScore {
+                    Text("Are you sure you want to delete \"\(score.title)\"? This cannot be undone.")
+                }
+            }
+            .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
+                Button(String(localized: "Cancel"), role: .cancel) {}
+                Button(String(localized: "Delete"), role: .destructive) { deleteSelectedScores() }
+            } message: {
+                Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
+            }
+            .sheet(item: $editingScore) { score in
+                ScoreMetadataEditorView(score: score, existingTags: allTags)
+            }
+            .alert(String(localized: "New Folder"), isPresented: $isCreatingFolder) {
+                TextField(String(localized: "Folder Name"), text: $newFolderName)
+                Button(String(localized: "Cancel"), role: .cancel) { newFolderName = "" }
+                Button(String(localized: "Create")) { createFolder() }
+            }
+            .alert(String(localized: "New Program"), isPresented: $isCreatingProgram) {
+                TextField(String(localized: "Program Name"), text: $newProgramName)
+                Button(String(localized: "Cancel"), role: .cancel) { newProgramName = "" }
+                Button(String(localized: "Create")) { createProgram() }
+            }
+            .alert(String(localized: "Rename Folder"), isPresented: .init(
+                get: { renamingFolder != nil },
+                set: { if !$0 { renamingFolder = nil } }
+            )) {
+                TextField(String(localized: "Folder Name"), text: $folderRenameText)
+                Button(String(localized: "Cancel"), role: .cancel) { renamingFolder = nil }
+                Button(String(localized: "Rename")) { commitFolderRename() }
+            }
+            .alert(String(localized: "Rename Program"), isPresented: .init(
+                get: { renamingProgram != nil },
+                set: { if !$0 { renamingProgram = nil } }
+            )) {
+                TextField(String(localized: "Program Name"), text: $programRenameText)
+                Button(String(localized: "Cancel"), role: .cancel) { renamingProgram = nil }
+                Button(String(localized: "Rename")) { commitProgramRename() }
+            }
+            .scoreImporter(isPresented: $isImporting, folder: folder)
+    }
+
+    // MARK: - Content
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if showsToolbar {
+            contentView
+                .searchable(
+                    text: $searchText,
+                    isPresented: $isSearchFieldPresented,
+                    placement: .navigationBarDrawer(displayMode: .automatic),
+                    prompt: String(localized: "Search Scores")
+                )
+                .onChange(of: isSearchFieldPresented) { _, newValue in
+                    if !newValue {
+                        searchText = ""
+                    }
+                }
+        } else {
+            contentView
+        }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        if isSearchActive {
+            searchResultsGrid
+        } else {
+            browseGrid
+        }
+    }
+
+    private var searchResultsGrid: some View {
+        ScrollView {
+            if searchResults.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+                    .padding(.top, 60)
+            } else {
+                LazyVGrid(columns: gridColumns, spacing: 16) {
+                    ForEach(searchResults) { score in
+                        scoreCard(for: score)
+                    }
+                }
+                .padding(16)
+                .dragToSelect(
+                    selectedIds: $selectedScoreIds,
+                    isSelecting: isSelecting,
+                    orderedIds: searchResults.map(\.id)
+                )
+            }
+        }
+    }
+
+    private var browseGrid: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 sectionView(title: String(localized: "Folders")) {
@@ -139,156 +281,9 @@ struct BrowseCatalogView: View {
             }
             .padding(.vertical, 16)
         }
-        .toolbar {
-            selectionToolbar
-        }
-        .alert(String(localized: "Delete Score"), isPresented: .init(
-            get: { deletingScore != nil },
-            set: { if !$0 { deletingScore = nil } }
-        )) {
-            Button(String(localized: "Cancel"), role: .cancel) { deletingScore = nil }
-            Button(String(localized: "Delete"), role: .destructive) { confirmDeleteScore() }
-        } message: {
-            if let score = deletingScore {
-                Text("Are you sure you want to delete \"\(score.title)\"? This cannot be undone.")
-            }
-        }
-        .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
-            Button(String(localized: "Cancel"), role: .cancel) {}
-            Button(String(localized: "Delete"), role: .destructive) { deleteSelectedScores() }
-        } message: {
-            Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
-        }
-        .sheet(item: $editingScore) { score in
-            ScoreMetadataEditorView(score: score, existingTags: allTags)
-        }
-        .alert(String(localized: "New Folder"), isPresented: $isCreatingFolder) {
-            TextField(String(localized: "Folder Name"), text: $newFolderName)
-            Button(String(localized: "Cancel"), role: .cancel) { newFolderName = "" }
-            Button(String(localized: "Create")) { createFolder() }
-        }
-        .alert(String(localized: "New Program"), isPresented: $isCreatingProgram) {
-            TextField(String(localized: "Program Name"), text: $newProgramName)
-            Button(String(localized: "Cancel"), role: .cancel) { newProgramName = "" }
-            Button(String(localized: "Create")) { createProgram() }
-        }
-        .alert(String(localized: "Rename Folder"), isPresented: .init(
-            get: { renamingFolder != nil },
-            set: { if !$0 { renamingFolder = nil } }
-        )) {
-            TextField(String(localized: "Folder Name"), text: $folderRenameText)
-            Button(String(localized: "Cancel"), role: .cancel) { renamingFolder = nil }
-            Button(String(localized: "Rename")) { commitFolderRename() }
-        }
-        .alert(String(localized: "Rename Program"), isPresented: .init(
-            get: { renamingProgram != nil },
-            set: { if !$0 { renamingProgram = nil } }
-        )) {
-            TextField(String(localized: "Program Name"), text: $programRenameText)
-            Button(String(localized: "Cancel"), role: .cancel) { renamingProgram = nil }
-            Button(String(localized: "Rename")) { commitProgramRename() }
-        }
-        .scoreImporter(isPresented: $isImporting, folder: folder)
     }
 
-    @ToolbarContentBuilder
-    private var selectionToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            if isSelecting {
-                Button(allSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
-                    withAnimation {
-                        if allSelected {
-                            selectedScoreIds.removeAll()
-                        } else {
-                            selectedScoreIds = Set(visibleScores.map(\.id))
-                        }
-                    }
-                }
-            }
-        }
-        if isSelecting {
-            ToolbarItemGroup(placement: .primaryAction) {
-                if !allFolders.isEmpty {
-                    Menu {
-                        ForEach(allFolders) { targetFolder in
-                            if targetFolder.id != folder?.id {
-                                Button(targetFolder.name) {
-                                    moveSelectedScores(to: targetFolder)
-                                }
-                            }
-                        }
-                        Divider()
-                        Button(String(localized: "Remove from Folder")) {
-                            moveSelectedScores(to: nil)
-                        }
-                    } label: {
-                        Label(String(localized: "Move"), systemImage: "folder")
-                    }
-                    .disabled(selectedScoreIds.isEmpty)
-                }
-
-                if !allPrograms.isEmpty {
-                    Menu {
-                        ForEach(allPrograms) { program in
-                            Button(program.name) {
-                                addSelectedScores(to: program)
-                            }
-                        }
-                    } label: {
-                        Label(String(localized: "Add to Program"), systemImage: "music.note.list")
-                    }
-                    .disabled(selectedScoreIds.isEmpty)
-                }
-
-                Button(role: .destructive) {
-                    showDeleteSelectedAlert = true
-                } label: {
-                    Label(String(localized: "Delete"), systemImage: "trash")
-                }
-                .disabled(selectedScoreIds.isEmpty)
-
-                Button {
-                    withAnimation {
-                        isSelecting = false
-                        selectedScoreIds.removeAll()
-                    }
-                } label: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, .tint)
-                }
-            }
-        } else {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    withAnimation { isSelecting = true }
-                } label: {
-                    Text(String(localized: "Select"))
-                }
-            }
-
-            if #available(iOS 26, *) {
-                ToolbarSpacer(.fixed, placement: .primaryAction)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button(action: { isImporting = true }) {
-                        Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
-                    }
-                    Button(action: { isCreatingFolder = true }) {
-                        Label(String(localized: "New Folder"), systemImage: "folder.badge.plus")
-                    }
-                    Button(action: { isCreatingProgram = true }) {
-                        Label(String(localized: "New Program"), systemImage: "music.note.list")
-                    }
-                } label: {
-                    Label(String(localized: "Add"), systemImage: "plus")
-                }
-            }
-        }
-    }
+    // MARK: - Components
 
     private func sectionView<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -336,10 +331,7 @@ struct BrowseCatalogView: View {
         }
     }
 
-    private var allSelected: Bool {
-        let scores = visibleScores
-        return !scores.isEmpty && selectedScoreIds.count == scores.count
-    }
+    // MARK: - Actions
 
     private func toggleSelection(_ score: Score) {
         if selectedScoreIds.contains(score.id) {
@@ -350,7 +342,7 @@ struct BrowseCatalogView: View {
     }
 
     private func moveSelectedScores(to target: Folder?) {
-        for score in visibleScores where selectedScoreIds.contains(score.id) {
+        for score in selectableScores where selectedScoreIds.contains(score.id) {
             score.folder = target
             score.updatedAt = .now
         }
@@ -359,7 +351,7 @@ struct BrowseCatalogView: View {
     }
 
     private func addSelectedScores(to program: Program) {
-        for score in visibleScores where selectedScoreIds.contains(score.id) {
+        for score in selectableScores where selectedScoreIds.contains(score.id) {
             program.appendScore(score)
         }
         try? modelContext.save()
@@ -367,7 +359,7 @@ struct BrowseCatalogView: View {
     }
 
     private func deleteSelectedScores() {
-        for score in visibleScores where selectedScoreIds.contains(score.id) {
+        for score in selectableScores where selectedScoreIds.contains(score.id) {
             modelContext.delete(score)
         }
         try? modelContext.save()
