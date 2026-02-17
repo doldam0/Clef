@@ -686,7 +686,6 @@
       }
     },
     "Rename Folder" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -907,6 +906,7 @@
       }
     },
     "Uncategorized" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
