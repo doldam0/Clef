@@ -66,12 +66,12 @@ struct RecentScoresView: View {
 
     private var emptyLibraryView: some View {
         ContentUnavailableView {
-            Label(String(localized: "No Scores"), systemImage: "music.note")
+            Label("No Scores", systemImage: "music.note")
         } description: {
-            Text(String(localized: "Import PDF sheet music to get started"))
+            Text("Import PDF sheet music to get started")
         } actions: {
             Button(action: onImport) {
-                Text(String(localized: "Import Score"))
+                Text("Import Score")
             }
             .buttonStyle(.borderedProminent)
         }

@@ -15,7 +15,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab(String(localized: "Recent"), systemImage: "clock", value: .recent) {
+            Tab("Recent", systemImage: "clock", value: .recent) {
                 NavigationStack(path: $recentPath) {
                     ScoreLibraryView(
                         tab: .recent,
@@ -78,7 +78,7 @@ struct ContentView: View {
                     }
                 }
             }
-            Tab(String(localized: "Browse"), systemImage: "folder", value: .browse) {
+            Tab("Browse", systemImage: "folder", value: .browse) {
                 NavigationStack(path: $browsePath) {
                     ScoreLibraryView(
                         tab: .browse,

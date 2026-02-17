@@ -21,7 +21,7 @@ struct LibraryToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if isSelecting {
-                Button(allSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
+                Button(allSelected ? "Deselect All" : "Select All") {
                     withAnimation {
                         if allSelected {
                             selectedScoreIds.removeAll()
@@ -44,11 +44,11 @@ struct LibraryToolbar: ToolbarContent {
                             }
                         }
                         Divider()
-                        Button(String(localized: "Remove from Folder")) {
+                        Button("Remove from Folder") {
                             onMoveToFolder(nil)
                         }
                     } label: {
-                        Label(String(localized: "Move"), systemImage: "folder")
+                        Label("Move", systemImage: "folder")
                     }
                     .disabled(selectedScoreIds.isEmpty)
                 }
@@ -61,7 +61,7 @@ struct LibraryToolbar: ToolbarContent {
                             }
                         }
                     } label: {
-                        Label(String(localized: "Add to Program"), systemImage: "music.note.list")
+                        Label("Add to Program", systemImage: "music.note.list")
                     }
                     .disabled(selectedScoreIds.isEmpty)
                 }
@@ -69,7 +69,7 @@ struct LibraryToolbar: ToolbarContent {
                 Button(role: .destructive) {
                     showDeleteSelectedAlert = true
                 } label: {
-                    Label(String(localized: "Delete"), systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
                 .disabled(selectedScoreIds.isEmpty)
 
@@ -90,7 +90,7 @@ struct LibraryToolbar: ToolbarContent {
                 Button {
                     withAnimation { isSelecting = true }
                 } label: {
-                    Text(String(localized: "Select"))
+                    Text("Select")
                 }
                 .disabled(selectableScores.isEmpty)
             }
@@ -102,16 +102,16 @@ struct LibraryToolbar: ToolbarContent {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: onImport) {
-                        Label(String(localized: "Import Score"), systemImage: "doc.badge.plus")
+                        Label("Import Score", systemImage: "doc.badge.plus")
                     }
                     Button(action: onCreateFolder) {
-                        Label(String(localized: "New Folder"), systemImage: "folder.badge.plus")
+                        Label("New Folder", systemImage: "folder.badge.plus")
                     }
                     Button(action: onCreateProgram) {
-                        Label(String(localized: "New Program"), systemImage: "music.note.list")
+                        Label("New Program", systemImage: "music.note.list")
                     }
                 } label: {
-                    Label(String(localized: "Add"), systemImage: "plus")
+                    Label("Add", systemImage: "plus")
                 }
             }
         }

@@ -97,51 +97,51 @@ struct BrowseCatalogView: View {
                     )
                 }
             }
-            .alert(String(localized: "Delete Score"), isPresented: .init(
+            .alert("Delete Score", isPresented: .init(
                 get: { deletingScore != nil },
                 set: { if !$0 { deletingScore = nil } }
             )) {
-                Button(String(localized: "Cancel"), role: .cancel) { deletingScore = nil }
-                Button(String(localized: "Delete"), role: .destructive) { confirmDeleteScore() }
+                Button("Cancel", role: .cancel) { deletingScore = nil }
+                Button("Delete", role: .destructive) { confirmDeleteScore() }
             } message: {
                 if let score = deletingScore {
                     Text("Are you sure you want to delete \"\(score.title)\"? This cannot be undone.")
                 }
             }
-            .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
-                Button(String(localized: "Cancel"), role: .cancel) {}
-                Button(String(localized: "Delete"), role: .destructive) { deleteSelectedScores() }
+            .alert("Delete Selected", isPresented: $showDeleteSelectedAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) { deleteSelectedScores() }
             } message: {
                 Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
             }
             .sheet(item: $editingScore) { score in
                 ScoreMetadataEditorView(score: score, existingTags: allTags)
             }
-            .alert(String(localized: "New Folder"), isPresented: $isCreatingFolder) {
-                TextField(String(localized: "Folder Name"), text: $newFolderName)
-                Button(String(localized: "Cancel"), role: .cancel) { newFolderName = "" }
-                Button(String(localized: "Create")) { createFolder() }
+            .alert("New Folder", isPresented: $isCreatingFolder) {
+                TextField("Folder Name", text: $newFolderName)
+                Button("Cancel", role: .cancel) { newFolderName = "" }
+                Button("Create") { createFolder() }
             }
-            .alert(String(localized: "New Program"), isPresented: $isCreatingProgram) {
-                TextField(String(localized: "Program Name"), text: $newProgramName)
-                Button(String(localized: "Cancel"), role: .cancel) { newProgramName = "" }
-                Button(String(localized: "Create")) { createProgram() }
+            .alert("New Program", isPresented: $isCreatingProgram) {
+                TextField("Program Name", text: $newProgramName)
+                Button("Cancel", role: .cancel) { newProgramName = "" }
+                Button("Create") { createProgram() }
             }
-            .alert(String(localized: "Rename Folder"), isPresented: .init(
+            .alert("Rename Folder", isPresented: .init(
                 get: { renamingFolder != nil },
                 set: { if !$0 { renamingFolder = nil } }
             )) {
-                TextField(String(localized: "Folder Name"), text: $folderRenameText)
-                Button(String(localized: "Cancel"), role: .cancel) { renamingFolder = nil }
-                Button(String(localized: "Rename")) { commitFolderRename() }
+                TextField("Folder Name", text: $folderRenameText)
+                Button("Cancel", role: .cancel) { renamingFolder = nil }
+                Button("Rename") { commitFolderRename() }
             }
-            .alert(String(localized: "Rename Program"), isPresented: .init(
+            .alert("Rename Program", isPresented: .init(
                 get: { renamingProgram != nil },
                 set: { if !$0 { renamingProgram = nil } }
             )) {
-                TextField(String(localized: "Program Name"), text: $programRenameText)
-                Button(String(localized: "Cancel"), role: .cancel) { renamingProgram = nil }
-                Button(String(localized: "Rename")) { commitProgramRename() }
+                TextField("Program Name", text: $programRenameText)
+                Button("Cancel", role: .cancel) { renamingProgram = nil }
+                Button("Rename") { commitProgramRename() }
             }
             .scoreImporter(isPresented: $isImporting, folder: folder)
     }
@@ -155,7 +155,7 @@ struct BrowseCatalogView: View {
                 .searchable(
                     text: $searchText,
                     placement: .toolbar,
-                    prompt: String(localized: "Search Scores")
+                    prompt: "Search Scores"
                 )
         } else {
             contentView
@@ -204,7 +204,7 @@ struct BrowseCatalogView: View {
                             Button {
                                 beginFolderRename(child)
                             } label: {
-                                Label(String(localized: "Rename"), systemImage: "pencil")
+                                Label("Rename", systemImage: "pencil")
                             }
 
                             Divider()
@@ -212,7 +212,7 @@ struct BrowseCatalogView: View {
                             Button(role: .destructive) {
                                 deleteFolder(child)
                             } label: {
-                                Label(String(localized: "Delete"), systemImage: "trash")
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                     }
@@ -230,7 +230,7 @@ struct BrowseCatalogView: View {
                             Button {
                                 beginProgramRename(program)
                             } label: {
-                                Label(String(localized: "Rename"), systemImage: "pencil")
+                                Label("Rename", systemImage: "pencil")
                             }
 
                             Divider()
@@ -238,7 +238,7 @@ struct BrowseCatalogView: View {
                             Button(role: .destructive) {
                                 deleteProgram(program)
                             } label: {
-                                Label(String(localized: "Delete"), systemImage: "trash")
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                     }
@@ -249,7 +249,7 @@ struct BrowseCatalogView: View {
 
                 if !visibleScores.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "Scores"))
+                        Text("Scores")
                             .font(.title3.bold())
                             .padding(.horizontal, 16)
 
@@ -313,12 +313,12 @@ struct BrowseCatalogView: View {
 
     private var emptyView: some View {
         ContentUnavailableView {
-            Label(String(localized: "No Scores"), systemImage: "music.note")
+            Label("No Scores", systemImage: "music.note")
         } description: {
-            Text(String(localized: "Import PDF sheet music to get started"))
+            Text("Import PDF sheet music to get started")
         } actions: {
             Button(action: { isImporting = true }) {
-                Text(String(localized: "Import Score"))
+                Text("Import Score")
             }
             .buttonStyle(.borderedProminent)
         }

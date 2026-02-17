@@ -17,7 +17,7 @@ struct ScoreContextMenuModifier: ViewModifier {
                 Button {
                     onEdit?(score)
                 } label: {
-                    Label(String(localized: "Edit Info"), systemImage: "info.circle")
+                    Label("Edit Info", systemImage: "info.circle")
                 }
 
                 Button {
@@ -27,8 +27,8 @@ struct ScoreContextMenuModifier: ViewModifier {
                 } label: {
                     Label(
                         score.isFavorite
-                            ? String(localized: "Unfavorite")
-                            : String(localized: "Favorite"),
+                            ? "Unfavorite"
+                            : "Favorite",
                         systemImage: score.isFavorite ? "heart.slash" : "heart"
                     )
                 }
@@ -44,14 +44,14 @@ struct ScoreContextMenuModifier: ViewModifier {
                         }
                         if score.folder != nil {
                             Divider()
-                            Button(String(localized: "Remove from Folder")) {
+                            Button("Remove from Folder") {
                                 score.folder = nil
                                 score.updatedAt = .now
                                 try? modelContext.save()
                             }
                         }
                     } label: {
-                        Label(String(localized: "Move to Folder"), systemImage: "folder")
+                        Label("Move to Folder", systemImage: "folder")
                     }
                 }
 
@@ -64,7 +64,7 @@ struct ScoreContextMenuModifier: ViewModifier {
                             }
                         }
                     } label: {
-                        Label(String(localized: "Add to Program"), systemImage: "music.note.list")
+                        Label("Add to Program", systemImage: "music.note.list")
                     }
                 }
 
@@ -73,7 +73,7 @@ struct ScoreContextMenuModifier: ViewModifier {
                 Button(role: .destructive) {
                     onDelete?(score)
                 } label: {
-                    Label(String(localized: "Delete"), systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             })
     }

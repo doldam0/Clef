@@ -23,15 +23,15 @@ struct ProgramDetailView: View {
         }
         .navigationTitle(program.name)
         .toolbar(content: programToolbar)
-        .alert(String(localized: "Remove from Program"), isPresented: $showRemoveSelectedAlert) {
-            Button(String(localized: "Cancel"), role: .cancel) {}
-            Button(String(localized: "Remove"), role: .destructive) { removeSelectedItems() }
+        .alert("Remove from Program", isPresented: $showRemoveSelectedAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Remove", role: .destructive) { removeSelectedItems() }
         } message: {
             Text("Remove \(selectedItemIds.count) scores from this program?")
         }
-        .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
-            Button(String(localized: "Cancel"), role: .cancel) {}
-            Button(String(localized: "Delete"), role: .destructive) { deleteSelectedItems() }
+        .alert("Delete Selected", isPresented: $showDeleteSelectedAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { deleteSelectedItems() }
         } message: {
             Text("Delete \(selectedItemIds.count) scores permanently? This cannot be undone.")
         }
@@ -46,7 +46,7 @@ struct ProgramDetailView: View {
         } description: {
             Text("Add scores to this program")
         } actions: {
-            Button(String(localized: "Add Scores")) {
+            Button("Add Scores") {
                 showScorePicker = true
             }
         }
@@ -105,7 +105,7 @@ struct ProgramDetailView: View {
     private func programToolbar() -> some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if isSelecting {
-                Button(allItemsSelected ? String(localized: "Deselect All") : String(localized: "Select All")) {
+                Button(allItemsSelected ? "Deselect All" : "Select All") {
                     withAnimation {
                         if allItemsSelected {
                             selectedItemIds.removeAll()
@@ -121,7 +121,7 @@ struct ProgramDetailView: View {
                 Button {
                     showRemoveSelectedAlert = true
                 } label: {
-                    Label(String(localized: "Remove"), systemImage: "minus.circle")
+                    Label("Remove", systemImage: "minus.circle")
                 }
                 .disabled(selectedItemIds.isEmpty)
             }
@@ -131,7 +131,7 @@ struct ProgramDetailView: View {
                 Button(role: .destructive) {
                     showDeleteSelectedAlert = true
                 } label: {
-                    Label(String(localized: "Delete"), systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
                 .disabled(selectedItemIds.isEmpty)
             }
@@ -153,7 +153,7 @@ struct ProgramDetailView: View {
                 Button {
                     withAnimation { isSelecting = true }
                 } label: {
-                    Text(String(localized: "Select"))
+                    Text("Select")
                 }
             }
         }
@@ -167,7 +167,7 @@ struct ProgramDetailView: View {
                 Button {
                     showScorePicker = true
                 } label: {
-                    Label(String(localized: "Add Scores"), systemImage: "plus")
+                    Label("Add Scores", systemImage: "plus")
                 }
             }
         }

@@ -88,8 +88,8 @@ struct ScoreLibraryView: View {
                 }
             }
         }
-        .navigationTitle(String(localized: "Library"))
-        .searchable(text: $searchText, placement: .toolbar, prompt: String(localized: "Search Scores"))
+        .navigationTitle("Library")
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Search Scores")
         .toolbar {
             LibraryToolbar(
                 isSelecting: $isSelecting,
@@ -111,12 +111,12 @@ struct ScoreLibraryView: View {
                 onAddToProgram: { addSelectedScores(to: $0) }
             )
         }
-        .alert(String(localized: "Delete Score"), isPresented: .init(
+        .alert("Delete Score", isPresented: .init(
             get: { deletingScore != nil },
             set: { if !$0 { deletingScore = nil } }
         )) {
-            Button(String(localized: "Cancel"), role: .cancel) { deletingScore = nil }
-            Button(String(localized: "Delete"), role: .destructive) { confirmDeleteScore() }
+            Button("Cancel", role: .cancel) { deletingScore = nil }
+            Button("Delete", role: .destructive) { confirmDeleteScore() }
         } message: {
             if let score = deletingScore {
                 Text("Are you sure you want to delete \"\(score.title)\"? This cannot be undone.")
@@ -125,9 +125,9 @@ struct ScoreLibraryView: View {
         .sheet(item: $editingScore) { score in
             ScoreMetadataEditorView(score: score, existingTags: allTags)
         }
-        .alert(String(localized: "Delete Selected"), isPresented: $showDeleteSelectedAlert) {
-            Button(String(localized: "Cancel"), role: .cancel) {}
-            Button(String(localized: "Delete"), role: .destructive) { deleteSelectedScores() }
+        .alert("Delete Selected", isPresented: $showDeleteSelectedAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { deleteSelectedScores() }
         } message: {
             Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
         }

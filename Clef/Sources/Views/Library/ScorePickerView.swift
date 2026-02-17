@@ -30,9 +30,9 @@ struct ScorePickerView: View {
             Group {
                 if allScores.isEmpty {
                     ContentUnavailableView {
-                        Label(String(localized: "No Scores"), systemImage: "music.note")
+                        Label("No Scores", systemImage: "music.note")
                     } description: {
-                        Text(String(localized: "Import scores to your library first"))
+                        Text("Import scores to your library first")
                     }
                 } else if filteredScores.isEmpty {
                     ContentUnavailableView.search(text: searchText)
@@ -40,15 +40,15 @@ struct ScorePickerView: View {
                     scoreList
                 }
             }
-            .navigationTitle(String(localized: "Add Scores"))
+            .navigationTitle("Add Scores")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: String(localized: "Search Scores"))
+            .searchable(text: $searchText, prompt: "Search Scores")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "Cancel")) { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "Add") + " (\(selectedIds.count))") {
+                    Button("Add (\(selectedIds.count))") {
                         addSelectedScores()
                         dismiss()
                     }
