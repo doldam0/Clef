@@ -4,69 +4,141 @@ import SwiftData
 struct ContentView: View {
     @Query(sort: \Score.updatedAt, order: .reverse) private var scores: [Score]
     @State private var isImporting = false
-    @State private var navigationPath = NavigationPath()
+    @State private var selectedTab: LibraryTab = .recent
+    @State private var searchText = ""
+    @State private var recentPath = NavigationPath()
+    @State private var browsePath = NavigationPath()
 
     private var allTags: [String] {
         Array(Set(scores.flatMap(\.tags))).sorted()
     }
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            ScoreLibraryView(
-                onImport: { isImporting = true },
-                onScoreTapped: { score in
-                    navigationPath.append(ScoreNavigation.reader(score.id))
-                },
-                onProgramTapped: { program in
-                    navigationPath.append(ProgramNavigation.detail(program.id))
-                },
-                onFolderTapped: { folder in
-                    navigationPath.append(FolderNavigation.detail(folder.id))
-                }
-            )
-            .navigationDestination(for: ScoreNavigation.self) { nav in
-                switch nav {
-                case .reader(let scoreId):
-                    if let score = scores.first(where: { $0.id == scoreId }) {
-                        ScoreReaderView(score: score, allTags: allTags)
+        TabView(selection: $selectedTab) {
+            Tab(String(localized: "Recent"), systemImage: "clock", value: .recent) {
+                NavigationStack(path: $recentPath) {
+                    ScoreLibraryView(
+                        tab: .recent,
+                        searchText: $searchText,
+                        onImport: { isImporting = true },
+                        onScoreTapped: { score in
+                            recentPath.append(ScoreNavigation.reader(score.id))
+                        },
+                        onProgramTapped: { program in
+                            recentPath.append(ProgramNavigation.detail(program.id))
+                        },
+                        onFolderTapped: { folder in
+                            recentPath.append(FolderNavigation.detail(folder.id))
+                        }
+                    )
+                    .navigationDestination(for: ScoreNavigation.self) { nav in
+                        switch nav {
+                        case .reader(let scoreId):
+                            if let score = scores.first(where: { $0.id == scoreId }) {
+                                ScoreReaderView(score: score, allTags: allTags)
+                            }
+                        }
+                    }
+                    .navigationDestination(for: FolderNavigation.self) { nav in
+                        switch nav {
+                        case .detail(let folderId):
+                            FolderDestinationView(
+                                folderId: folderId,
+                                onScoreTapped: { score in
+                                    recentPath.append(ScoreNavigation.reader(score.id))
+                                },
+                                onProgramTapped: { program in
+                                    recentPath.append(ProgramNavigation.detail(program.id))
+                                },
+                                onFolderTapped: { folder in
+                                    recentPath.append(FolderNavigation.detail(folder.id))
+                                }
+                            )
+                        }
+                    }
+                    .navigationDestination(for: ProgramNavigation.self) { nav in
+                        switch nav {
+                        case .detail(let programId):
+                            ProgramDestinationView(
+                                programId: programId,
+                                allTags: allTags,
+                                onScoreTapped: { score in
+                                    recentPath.append(ScoreNavigation.reader(score.id))
+                                },
+                                onPlayProgram: { program in
+                                    recentPath.append(ProgramNavigation.play(program.id))
+                                }
+                            )
+                        case .play(let programId):
+                            ProgramPlayerDestinationView(
+                                programId: programId,
+                                allTags: allTags
+                            )
+                        }
                     }
                 }
             }
-            .navigationDestination(for: FolderNavigation.self) { nav in
-                switch nav {
-                case .detail(let folderId):
-                    FolderDestinationView(
-                        folderId: folderId,
+            Tab(String(localized: "Browse"), systemImage: "folder", value: .browse) {
+                NavigationStack(path: $browsePath) {
+                    ScoreLibraryView(
+                        tab: .browse,
+                        searchText: $searchText,
+                        onImport: { isImporting = true },
                         onScoreTapped: { score in
-                            navigationPath.append(ScoreNavigation.reader(score.id))
+                            browsePath.append(ScoreNavigation.reader(score.id))
                         },
                         onProgramTapped: { program in
-                            navigationPath.append(ProgramNavigation.detail(program.id))
+                            browsePath.append(ProgramNavigation.detail(program.id))
                         },
                         onFolderTapped: { folder in
-                            navigationPath.append(FolderNavigation.detail(folder.id))
+                            browsePath.append(FolderNavigation.detail(folder.id))
                         }
                     )
-                }
-            }
-            .navigationDestination(for: ProgramNavigation.self) { nav in
-                switch nav {
-                case .detail(let programId):
-                    ProgramDestinationView(
-                        programId: programId,
-                        allTags: allTags,
-                        onScoreTapped: { score in
-                            navigationPath.append(ScoreNavigation.reader(score.id))
-                        },
-                        onPlayProgram: { program in
-                            navigationPath.append(ProgramNavigation.play(program.id))
+                    .navigationDestination(for: ScoreNavigation.self) { nav in
+                        switch nav {
+                        case .reader(let scoreId):
+                            if let score = scores.first(where: { $0.id == scoreId }) {
+                                ScoreReaderView(score: score, allTags: allTags)
+                            }
                         }
-                    )
-                case .play(let programId):
-                    ProgramPlayerDestinationView(
-                        programId: programId,
-                        allTags: allTags
-                    )
+                    }
+                    .navigationDestination(for: FolderNavigation.self) { nav in
+                        switch nav {
+                        case .detail(let folderId):
+                            FolderDestinationView(
+                                folderId: folderId,
+                                onScoreTapped: { score in
+                                    browsePath.append(ScoreNavigation.reader(score.id))
+                                },
+                                onProgramTapped: { program in
+                                    browsePath.append(ProgramNavigation.detail(program.id))
+                                },
+                                onFolderTapped: { folder in
+                                    browsePath.append(FolderNavigation.detail(folder.id))
+                                }
+                            )
+                        }
+                    }
+                    .navigationDestination(for: ProgramNavigation.self) { nav in
+                        switch nav {
+                        case .detail(let programId):
+                            ProgramDestinationView(
+                                programId: programId,
+                                allTags: allTags,
+                                onScoreTapped: { score in
+                                    browsePath.append(ScoreNavigation.reader(score.id))
+                                },
+                                onPlayProgram: { program in
+                                    browsePath.append(ProgramNavigation.play(program.id))
+                                }
+                            )
+                        case .play(let programId):
+                            ProgramPlayerDestinationView(
+                                programId: programId,
+                                allTags: allTags
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -122,6 +194,9 @@ private struct FolderDestinationView: View {
     let onFolderTapped: (Folder) -> Void
     @State private var isSelecting = false
     @State private var selectedScoreIds: Set<UUID> = []
+    @State private var isImporting = false
+    @State private var isCreatingFolder = false
+    @State private var isCreatingProgram = false
 
     var body: some View {
         if let folder = folders.first(where: { $0.id == folderId }) {
@@ -131,7 +206,10 @@ private struct FolderDestinationView: View {
                 onProgramTapped: onProgramTapped,
                 onFolderTapped: onFolderTapped,
                 isSelecting: $isSelecting,
-                selectedScoreIds: $selectedScoreIds
+                selectedScoreIds: $selectedScoreIds,
+                isImporting: $isImporting,
+                isCreatingFolder: $isCreatingFolder,
+                isCreatingProgram: $isCreatingProgram
             )
             .navigationTitle(folder.name)
         } else {
