@@ -1,25 +1,9 @@
 import SwiftUI
 import SwiftData
 
-private enum LibraryTab: String, CaseIterable, Identifiable {
+private enum LibraryTab: Hashable {
     case recent
     case browse
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .recent: String(localized: "Recent")
-        case .browse: String(localized: "Browse")
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .recent: "clock"
-        case .browse: "folder"
-        }
-    }
 }
 
 struct ScoreLibraryView: View {
@@ -63,24 +47,25 @@ struct ScoreLibraryView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
+        Group {
             if isSearchActive {
                 searchResultsGrid
-            } else if selectedTab == .recent {
-                recentTab
             } else {
-                BrowseCatalogView(
-                    folder: nil,
-                    onScoreTapped: onScoreTapped,
-                    onProgramTapped: onProgramTapped,
-                    onFolderTapped: onFolderTapped,
-                    isSelecting: $isSelecting,
-                    selectedScoreIds: $selectedScoreIds
-                )
-            }
-
-            if !isSearchActive {
-                tabBar
+                TabView(selection: $selectedTab) {
+                    Tab(String(localized: "Recent"), systemImage: "clock", value: .recent) {
+                        recentTab
+                    }
+                    Tab(String(localized: "Browse"), systemImage: "folder", value: .browse) {
+                        BrowseCatalogView(
+                            folder: nil,
+                            onScoreTapped: onScoreTapped,
+                            onProgramTapped: onProgramTapped,
+                            onFolderTapped: onFolderTapped,
+                            isSelecting: $isSelecting,
+                            selectedScoreIds: $selectedScoreIds
+                        )
+                    }
+                }
             }
         }
         .navigationTitle(String(localized: "Library"))
@@ -179,6 +164,20 @@ struct ScoreLibraryView: View {
                 }
             }
         } else {
+            if !allScores.isEmpty {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation { isSelecting = true }
+                    } label: {
+                        Text(String(localized: "Select"))
+                    }
+                }
+
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                }
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: onImport) {
@@ -188,101 +187,7 @@ struct ScoreLibraryView: View {
                     Label(String(localized: "Add"), systemImage: "plus")
                 }
             }
-
-            if !allScores.isEmpty {
-                if #available(iOS 26, *) {
-                    ToolbarSpacer(.fixed, placement: .primaryAction)
-                }
-
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        withAnimation { isSelecting = true }
-                    } label: {
-                        Label(String(localized: "Select"), systemImage: "checkmark.circle")
-                    }
-                }
-            }
         }
-    }
-
-    private var tabBar: some View {
-        Group {
-            if #available(iOS 26, *) {
-                glassTabBar
-            } else {
-                legacyTabBar
-            }
-        }
-    }
-
-    @available(iOS 26, *)
-    private var glassTabBar: some View {
-        GlassEffectContainer(spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(LibraryTab.allCases) { tab in
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedTab = tab
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: tab.icon)
-                                .font(.subheadline)
-                            Text(tab.label)
-                                .font(.subheadline.weight(.medium))
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                    }
-                    .glassEffect(
-                        selectedTab == tab
-                            ? .regular.interactive()
-                            : .clear.interactive(),
-                        in: .capsule
-                    )
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    private var legacyTabBar: some View {
-        HStack(spacing: 0) {
-            Spacer()
-            ForEach(LibraryTab.allCases) { tab in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedTab = tab
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: tab.icon)
-                            .font(.subheadline)
-                        Text(tab.label)
-                            .font(.subheadline.weight(.medium))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        selectedTab == tab
-                            ? AnyShapeStyle(.tint.opacity(0.15))
-                            : AnyShapeStyle(.clear),
-                        in: Capsule()
-                    )
-                    .foregroundStyle(selectedTab == tab ? .primary : .secondary)
-                }
-                .buttonStyle(.plain)
-
-                if tab != LibraryTab.allCases.last {
-                    Spacer().frame(width: 8)
-                }
-            }
-            Spacer()
-        }
-        .padding(.vertical, 12)
-        .background(.bar)
     }
 
     private var searchResultsGrid: some View {
