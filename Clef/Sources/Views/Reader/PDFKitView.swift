@@ -227,6 +227,11 @@ struct PDFKitView: UIViewRepresentable {
         }
 
         private func requirePagingFailure(in view: UIView, blocker: UIGestureRecognizer) {
+            // Skip annotation canvases entirely: their drawing/lasso gestures
+            // must not wait on the blocker, or a slow pencil lasso (which stays
+            // under the gate's movement threshold) gets stuck instead of
+            // selecting. Paging gestures live outside the canvases.
+            if view is PKCanvasView { return }
             for recognizer in view.gestureRecognizers ?? [] where recognizer !== blocker {
                 if recognizer is UIPanGestureRecognizer || recognizer is UISwipeGestureRecognizer {
                     recognizer.require(toFail: blocker)
@@ -314,21 +319,11 @@ struct PDFKitView: UIViewRepresentable {
             if pdfView.isInMarkupMode {
                 refreshPagingBlockerRequirements()
             }
+            overlayCoordinator.setCurrentPage(pageIndex)
             overlayCoordinator.preloadDrawings(around: pageIndex, pageCount: document.pageCount, isTwoPageMode: isTwoPage)
             overlayCoordinator.preRenderPages(around: pageIndex, document: document, isTwoPageMode: isTwoPage)
         }
     }
-}
-
-/// A per-page annotation canvas that never becomes first responder.
-///
-/// The tool picker is anchored to a separate, page-independent host canvas
-/// (see `OverlayCoordinator.toolHost`). If a page canvas were allowed to
-/// become first responder when touched, it would steal the anchor away and
-/// make the palette blink on every page turn. Drawing does not require first
-/// responder status, so refusing it keeps the palette perfectly stable.
-private final class AnnotationCanvasView: PKCanvasView {
-    override var canBecomeFirstResponder: Bool { false }
 }
 
 @MainActor
@@ -340,13 +335,15 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
     private var toolPicker: PKToolPicker!
 
     /// Invisible, page-independent canvas that owns the tool picker. It stays
-    /// first responder for the whole drawing session so the palette never
-    /// hides while paging. Per-page canvases mirror its selected tool via the
-    /// observer relationship.
+    /// first responder for the whole drawing session so the palette never hides
+    /// while paging. Per-page canvases mirror its selected tool via the observer
+    /// relationship, and are also registered with the picker so the palette
+    /// survives when the lasso tool makes one of them first responder.
     private let toolHost = PKCanvasView(frame: .zero)
 
     private var isDrawingEnabled: Bool
     private var hasAssertedHost = false
+    private var currentPageIndex = 0
     private var onDrawingChanged: (Int, PKDrawing) -> Void
     private var drawingForPage: (Int) -> PKDrawing
 
@@ -388,7 +385,7 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
             return existing
         }
 
-        let canvasView = AnnotationCanvasView(frame: .zero)
+        let canvasView = PKCanvasView(frame: .zero)
         canvasView.backgroundColor = .clear
         canvasView.isOpaque = false
         canvasView.drawingPolicy = .pencilOnly
@@ -407,6 +404,10 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         }
 
         toolPicker.addObserver(canvasView)
+        // Register as a monitored responder so the palette stays visible when the
+        // lasso tool makes this canvas first responder. The anchor owns the
+        // palette the rest of the time.
+        toolPicker.setVisible(true, forFirstResponder: canvasView)
         canvasCache[pageIndex] = canvasView
         canvasToPageIndex[ObjectIdentifier(canvasView)] = pageIndex
         return canvasView
@@ -448,12 +449,67 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
             guard changed || !hasAssertedHost else { return }
             hasAssertedHost = true
             toolPicker.setVisible(true, forFirstResponder: toolHost)
-            toolHost.becomeFirstResponder()
+            updateFirstResponder()
         } else if changed {
             hasAssertedHost = false
             toolPicker.setVisible(false, forFirstResponder: toolHost)
+            // Resign the anchor and any canvas left first responder by a lasso
+            // selection, so no monitored responder keeps the palette up.
+            for canvasView in canvasCache.values {
+                canvasView.resignFirstResponder()
+            }
             toolHost.resignFirstResponder()
         }
+    }
+
+    /// Tracks the visible page so first responder can be re-routed after a turn.
+    func setCurrentPage(_ pageIndex: Int) {
+        currentPageIndex = pageIndex
+        // Defer: touching first responder synchronously during a page transition
+        // fights the transition. Running next turn lets the new page settle.
+        Task { @MainActor [weak self] in self?.updateFirstResponder() }
+    }
+
+    private var isLassoSelected: Bool {
+        toolHost.tool is PKLassoTool
+    }
+
+    /// Decides which view owns first responder. The lasso tool needs the visible
+    /// page canvas (so selection and its edit menu work); every other tool keeps
+    /// the page-independent anchor. Crucially, no *off-screen* page canvas may
+    /// remain first responder — UIKit scrolls to keep a first responder visible,
+    /// which would snap the PDF back a page. The anchor lives outside the scroll
+    /// view, so holding it there is safe. Both are registered with the picker,
+    /// so the palette never drops when first responder moves between them.
+    private func updateFirstResponder() {
+        guard isDrawingEnabled else { return }
+        if isLassoSelected, let canvas = canvasCache[currentPageIndex] {
+            for (index, other) in canvasCache where index != currentPageIndex && other.isFirstResponder {
+                other.resignFirstResponder()
+            }
+            if !canvas.isFirstResponder {
+                canvas.becomeFirstResponder()
+            }
+        } else {
+            for canvasView in canvasCache.values where canvasView.isFirstResponder {
+                canvasView.resignFirstResponder()
+            }
+            if !toolHost.isFirstResponder {
+                toolHost.becomeFirstResponder()
+            }
+        }
+    }
+
+    func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
+        // Defer so the anchor (also an observer) has updated its `tool` first.
+        Task { @MainActor [weak self] in self?.updateFirstResponder() }
+    }
+
+    func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
+        // After a non-lasso stroke, hand first responder back to the anchor so
+        // this off-screen-able canvas can't drag the page back on the next turn.
+        guard !isLassoSelected else { return }
+        updateFirstResponder()
     }
 
     func preloadDrawings(around pageIndex: Int, pageCount: Int, isTwoPageMode: Bool) {
@@ -500,6 +556,7 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
     func cleanup() {
         for canvasView in canvasCache.values {
             toolPicker.removeObserver(canvasView)
+            toolPicker.setVisible(false, forFirstResponder: canvasView)
         }
         toolPicker.setVisible(false, forFirstResponder: toolHost)
         toolHost.resignFirstResponder()
