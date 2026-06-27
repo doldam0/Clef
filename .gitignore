@@ -65,3 +65,7 @@ fastlane/test_output
 build/
 *.xcodeproj
 screenshot_portrait.png
+
+# ML Adapter (large binary, not for git)
+*.fmadapter
+.DS_Store

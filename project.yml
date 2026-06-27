@@ -25,6 +25,10 @@ targets:
     platform: iOS
     sources:
       - path: Clef/Sources
+        excludes:
+          - "Resources/clef_metadata.fmadapter"
+      - path: Clef/Sources/Resources/clef_metadata.fmadapter
+        type: folder
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.doldam0.Clef

@@ -18,12 +18,9 @@ struct ExtractedMetadata: Sendable {
 @available(iOS 26.0, *)
 @Generable
 struct LLMScoreMetadata {
-    @Guide(description: "The title of the sheet music piece. Extract the full title as written.")
-    var title: String?
-    @Guide(description: "The full name of the composer as written on the score.")
-    var composer: String?
-    @Guide(description: "Instrument names translated to standard English. Only from Medium or Large text. Empty array if none visible.")
-    var instruments: [String]
+    var title: String
+    var composer: String
+    var instrument: String
 }
 #endif
 
@@ -150,8 +147,6 @@ actor MetadataExtractor {
         pdfSubject: String?,
         pdfCreator: String?
     ) async -> ExtractedMetadata? {
-        guard SystemLanguageModel.default.availability == .available else { return nil }
-
         let ocrText = formatOCRForLLM(ocrResults)
         let pdfMetadata = formatPDFMetadata(
             title: pdfTitle,
@@ -169,24 +164,36 @@ actor MetadataExtractor {
         """
 
         do {
-            let session = LanguageModelSession {
-                """
-                You are a sheet music metadata extractor. Each OCR line has [position, size] tags.
-
-                Extract:
-                - title: The piece name (usually Large text near top center)
-                - composer: The composer's full name (usually Medium or Large text near top right)
-                - instruments: Only from Medium or Large text. Ignore Small text (cue labels). Translate any non-English names to standard English. Most parts have 1-4 instruments.
-
-                Do NOT guess or infer. Only extract what is literally visible. When in doubt, leave empty.
-                """
+            let adapter = try SystemLanguageModel.Adapter(name: "clef_metadata")
+            let model = SystemLanguageModel(adapter: adapter)
+            let session = LanguageModelSession(model: model) {
+                "A conversation between a user and a helpful assistant. You are a sheet music metadata extractor. Given OCR text from the first page of a sheet music PDF, extract the title, composer, and instrument. Respond with a JSON object. Use \"<none>\" if a field cannot be determined."
             }
-            let response = try await session.respond(to: prompt, generating: LLMScoreMetadata.self)
+
+            let response = try await session.respond(
+                to: prompt,
+                generating: LLMScoreMetadata.self,
+                includeSchemaInPrompt: false
+            )
             let content = response.content
+
+            let none = "<none>"
+            let title = content.title == none ? nil : normalized(content.title)
+            let composer = content.composer == none ? nil : normalized(content.composer)
+            let instruments: [String]
+            if content.instrument == none || content.instrument.isEmpty {
+                instruments = []
+            } else {
+                instruments = content.instrument
+                    .split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+            }
+
             return ExtractedMetadata(
-                title: normalized(content.title),
-                composer: normalized(content.composer),
-                instruments: content.instruments
+                title: title,
+                composer: composer,
+                instruments: instruments
             )
         } catch {
             return nil
