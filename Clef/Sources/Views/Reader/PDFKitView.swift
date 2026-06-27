@@ -1,6 +1,54 @@
 import SwiftUI
 @preconcurrency import PDFKit
 import PencilKit
+import UIKit.UIGestureRecognizerSubclass
+
+/// Recognizes the moment three fingers are down, and fails the moment the touch
+/// is clearly not a three-finger gesture (movement begins with fewer than three
+/// touches). Paging gestures `require(toFail:)` this, so a three-finger
+/// undo/redo swipe never turns the page, while one- and two-finger swipes still
+/// page with no perceptible delay (the gate fails as soon as they move).
+final class ThreeFingerGate: UIGestureRecognizer {
+    private func activeTouchCount(_ event: UIEvent) -> Int {
+        (event.allTouches ?? []).filter { $0.phase != .ended && $0.phase != .cancelled }.count
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesBegan(touches, with: event)
+        if activeTouchCount(event) >= 3 { state = .began }
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesMoved(touches, with: event)
+        guard state == .possible else { return }
+        if activeTouchCount(event) >= 3 {
+            state = .began
+        } else if let touch = touches.first {
+            // Movement with fewer than three touches means a one/two-finger
+            // swipe — fail quickly so paging can begin. The small threshold
+            // leaves room for a slightly staggered third finger to land.
+            let current = touch.location(in: view)
+            let previous = touch.previousLocation(in: view)
+            if abs(current.x - previous.x) > 10 || abs(current.y - previous.y) > 10 {
+                state = .failed
+            }
+        }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesEnded(touches, with: event)
+        if state == .began || state == .changed {
+            state = .ended
+        } else if activeTouchCount(event) == 0 {
+            state = .failed
+        }
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesCancelled(touches, with: event)
+        state = .failed
+    }
+}
 
 struct PDFKitView: UIViewRepresentable {
     let pdfData: Data
@@ -68,6 +116,7 @@ struct PDFKitView: UIViewRepresentable {
 
         context.coordinator.pdfView = pdfView
         context.coordinator.subscribeToPageChanges(pdfView)
+        context.coordinator.installPagingBlocker(on: pdfView)
 
         return pdfView
     }
@@ -83,6 +132,7 @@ struct PDFKitView: UIViewRepresentable {
         let wasEnabled = pdfView.isInMarkupMode
         pdfView.isInMarkupMode = isDrawingEnabled
         context.coordinator.overlayCoordinator.setDrawingEnabled(isDrawingEnabled)
+        context.coordinator.setPagingBlockerActive(isDrawingEnabled)
 
         if isDrawingEnabled && !wasEnabled {
             pdfView.panWithTwoFingers()
@@ -104,6 +154,12 @@ struct PDFKitView: UIViewRepresentable {
         let overlayCoordinator: OverlayCoordinator
         private var pageObserver: NSObjectProtocol?
         private var hasFiredBoundary = false
+
+        /// A three-finger gate that does nothing on its own. Paging gestures are
+        /// made to require it to fail, so when three fingers are down (a system
+        /// undo/redo swipe) the page stays put. With one or two fingers it fails
+        /// as soon as they move and paging proceeds normally.
+        private var pagingBlocker: ThreeFingerGate?
 
         init(parent: PDFKitView) {
             self.parent = parent
@@ -132,6 +188,58 @@ struct PDFKitView: UIViewRepresentable {
                 NotificationCenter.default.removeObserver(observer)
             }
             overlayCoordinator.cleanup()
+        }
+
+        // MARK: - Three-finger paging blocker
+
+        func installPagingBlocker(on pdfView: PDFView) {
+            guard pagingBlocker == nil else { return }
+            let blocker = ThreeFingerGate(
+                target: self,
+                action: #selector(handlePagingBlocker(_:))
+            )
+            blocker.delegate = self
+            // Don't swallow the touches — the system undo/redo gesture still
+            // needs to see them.
+            blocker.cancelsTouchesInView = false
+            blocker.delaysTouchesBegan = false
+            blocker.delaysTouchesEnded = false
+            blocker.isEnabled = false
+            pdfView.addGestureRecognizer(blocker)
+            pagingBlocker = blocker
+        }
+
+        /// Enables/disables the blocker. Only active while drawing, since that's
+        /// the only time the three-finger undo/redo gesture is in play.
+        func setPagingBlockerActive(_ active: Bool) {
+            pagingBlocker?.isEnabled = active
+            if active {
+                refreshPagingBlockerRequirements()
+            }
+        }
+
+        /// Walks the PDF view hierarchy and makes every pan/swipe gesture defer
+        /// to the blocker. Re-run after page changes because PDFKit rebuilds its
+        /// internal paging gestures.
+        func refreshPagingBlockerRequirements() {
+            guard let pdfView, let blocker = pagingBlocker else { return }
+            requirePagingFailure(in: pdfView, blocker: blocker)
+        }
+
+        private func requirePagingFailure(in view: UIView, blocker: UIGestureRecognizer) {
+            for recognizer in view.gestureRecognizers ?? [] where recognizer !== blocker {
+                if recognizer is UIPanGestureRecognizer || recognizer is UISwipeGestureRecognizer {
+                    recognizer.require(toFail: blocker)
+                }
+            }
+            for subview in view.subviews {
+                requirePagingFailure(in: subview, blocker: blocker)
+            }
+        }
+
+        @objc private func handlePagingBlocker(_ gesture: UIGestureRecognizer) {
+            // Intentionally empty: it exists only to win recognition against the
+            // paging gestures when three fingers are down.
         }
 
         // MARK: - Boundary swipe detection
@@ -200,6 +308,12 @@ struct PDFKitView: UIViewRepresentable {
             let pageIndex = document.index(for: currentPage)
             parent.currentPageIndex = pageIndex
             let isTwoPage = parent.isTwoPageMode
+            // PDFKit can rebuild its internal paging gestures across page
+            // transitions, dropping the fail-requirement we install — reapply
+            // while drawing so three-finger undo/redo keeps the page in place.
+            if pdfView.isInMarkupMode {
+                refreshPagingBlockerRequirements()
+            }
             overlayCoordinator.preloadDrawings(around: pageIndex, pageCount: document.pageCount, isTwoPageMode: isTwoPage)
             overlayCoordinator.preRenderPages(around: pageIndex, document: document, isTwoPageMode: isTwoPage)
         }
