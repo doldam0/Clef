@@ -111,6 +111,7 @@ struct PDFKitView: UIViewRepresentable {
             pdfView.document = document
             DispatchQueue.main.async {
                 totalPages = document.pageCount
+                pdfView.hideScrollIndicators()
             }
         }
 
@@ -319,6 +320,7 @@ struct PDFKitView: UIViewRepresentable {
             if pdfView.isInMarkupMode {
                 refreshPagingBlockerRequirements()
             }
+            pdfView.hideScrollIndicators()
             overlayCoordinator.setCurrentPage(pageIndex)
             overlayCoordinator.preloadDrawings(around: pageIndex, pageCount: document.pageCount, isTwoPageMode: isTwoPage)
             overlayCoordinator.preRenderPages(around: pageIndex, document: document, isTwoPageMode: isTwoPage)
@@ -391,6 +393,8 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         canvasView.drawingPolicy = .pencilOnly
         canvasView.delegate = self
         canvasView.isUserInteractionEnabled = isDrawingEnabled
+        canvasView.showsVerticalScrollIndicator = false
+        canvasView.showsHorizontalScrollIndicator = false
         // Mirror the picker's current tool immediately; the observer below keeps
         // it in sync for subsequent changes.
         canvasView.tool = toolHost.tool
@@ -585,6 +589,23 @@ extension PDFView {
             if let scrollView = view as? UIScrollView {
                 scrollView.panGestureRecognizer.minimumNumberOfTouches = 2
             }
+        }
+    }
+
+    /// Hides the stray scroll indicator (a small gray bar) shown by the internal
+    /// paging/content scroll views. PDFKit rebuilds these across page changes, so
+    /// this is reapplied on every page turn.
+    func hideScrollIndicators() {
+        hideScrollIndicators(in: self)
+    }
+
+    private func hideScrollIndicators(in view: UIView) {
+        if let scrollView = view as? UIScrollView {
+            scrollView.showsVerticalScrollIndicator = false
+            scrollView.showsHorizontalScrollIndicator = false
+        }
+        for subview in view.subviews {
+            hideScrollIndicators(in: subview)
         }
     }
 }
