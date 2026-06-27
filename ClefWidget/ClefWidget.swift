@@ -5,31 +5,31 @@ import SwiftUI
 
 struct RecentEntry: TimelineEntry {
     let date: Date
-    let scores: [WidgetScore]
+    let items: [WidgetItem]
 }
 
 struct RecentProvider: TimelineProvider {
     func placeholder(in context: Context) -> RecentEntry {
-        RecentEntry(date: Date(), scores: [])
+        RecentEntry(date: Date(), items: [])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (RecentEntry) -> Void) {
-        completion(RecentEntry(date: Date(), scores: recentScores()))
+        completion(RecentEntry(date: Date(), items: recentItems()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<RecentEntry>) -> Void) {
-        completion(Timeline(entries: [RecentEntry(date: Date(), scores: recentScores())], policy: .never))
+        completion(Timeline(entries: [RecentEntry(date: Date(), items: recentItems())], policy: .never))
     }
 
-    private func recentScores() -> [WidgetScore] {
-        Array((WidgetShared.loadSnapshot()?.recent ?? []).prefix(8))
+    private func recentItems() -> [WidgetItem] {
+        WidgetShared.loadSnapshot()?.recent ?? []
     }
 }
 
 struct RecentScoresWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetShared.recentWidgetKind, provider: RecentProvider()) { entry in
-            ScoreGridView(title: "Recent", systemImage: "clock", scores: entry.scores)
+            ItemGridView(header: Text("Recent"), systemImage: "clock", items: entry.items)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("Recent Scores")
@@ -43,12 +43,12 @@ struct RecentScoresWidget: Widget {
 struct FolderEntry: TimelineEntry {
     let date: Date
     let title: String
-    let scores: [WidgetScore]
+    let items: [WidgetItem]
 }
 
 struct FolderProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> FolderEntry {
-        FolderEntry(date: Date(), title: "Folder", scores: [])
+        FolderEntry(date: Date(), title: "Folder", items: [])
     }
 
     func snapshot(for configuration: SelectFolderIntent, in context: Context) async -> FolderEntry {
@@ -64,9 +64,9 @@ struct FolderProvider: AppIntentTimelineProvider {
         guard let id = configuration.folder?.id,
               let folder = snapshot?.folders.first(where: { $0.id == id })
         else {
-            return FolderEntry(date: Date(), title: configuration.folder?.name ?? "Folder", scores: [])
+            return FolderEntry(date: Date(), title: configuration.folder?.name ?? "", items: [])
         }
-        return FolderEntry(date: Date(), title: folder.name, scores: Array(folder.scores.prefix(8)))
+        return FolderEntry(date: Date(), title: folder.name, items: folder.items)
     }
 }
 
@@ -77,22 +77,23 @@ struct FolderWidget: Widget {
             intent: SelectFolderIntent.self,
             provider: FolderProvider()
         ) { entry in
-            ScoreGridView(title: entry.title, systemImage: "folder", scores: entry.scores)
+            ItemGridView(header: Text(verbatim: entry.title), systemImage: "folder", items: entry.items)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("Folder")
-        .description("Scores in a folder you choose.")
+        .description("Subfolders, programs, and scores in a folder you choose.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
 // MARK: - Shared view
 
-struct ScoreGridView: View {
+struct ItemGridView: View {
     @Environment(\.widgetFamily) private var family
-    let title: String
+    /// Localized for the Recent widget; the raw folder name for the Folder widget.
+    let header: Text
     let systemImage: String
-    let scores: [WidgetScore]
+    let items: [WidgetItem]
 
     private var columns: Int { family == .systemSmall ? 2 : 4 }
 
@@ -105,19 +106,19 @@ struct ScoreGridView: View {
     }
 
     private var smallWidgetURL: URL? {
-        family == .systemSmall ? scores.first.map { WidgetShared.scoreURL($0.id) } : nil
+        family == .systemSmall ? items.first.map(WidgetShared.deepLink) : nil
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: systemImage)
+            Label { header } icon: { Image(systemName: systemImage) }
                 .font(.caption.bold())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            if scores.isEmpty {
+            if items.isEmpty {
                 Spacer()
-                Text("No scores yet")
+                Text("Empty")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity)
@@ -127,8 +128,8 @@ struct ScoreGridView: View {
                     columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns),
                     spacing: 8
                 ) {
-                    ForEach(scores.prefix(maxItems)) { score in
-                        cell(for: score)
+                    ForEach(items.prefix(maxItems)) { item in
+                        cell(for: item)
                     }
                 }
                 Spacer(minLength: 0)
@@ -138,30 +139,30 @@ struct ScoreGridView: View {
     }
 
     @ViewBuilder
-    private func cell(for score: WidgetScore) -> some View {
+    private func cell(for item: WidgetItem) -> some View {
         // Small widgets allow only a single tap target (widgetURL above), so
         // their cells aren't individually linked.
         if family == .systemSmall {
-            ScoreCell(score: score)
+            ItemCell(item: item)
         } else {
-            Link(destination: WidgetShared.scoreURL(score.id)) {
-                ScoreCell(score: score)
+            Link(destination: WidgetShared.deepLink(item)) {
+                ItemCell(item: item)
             }
         }
     }
 }
 
-private struct ScoreCell: View {
-    let score: WidgetScore
+private struct ItemCell: View {
+    let item: WidgetItem
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            thumbnail
+            artwork
                 .aspectRatio(3.0 / 4.0, contentMode: .fit)
                 .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 
-            Text(verbatim: score.title)
+            Text(verbatim: item.title)
                 .font(.system(size: 9, weight: .medium))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,19 +170,31 @@ private struct ScoreCell: View {
     }
 
     @ViewBuilder
-    private var thumbnail: some View {
-        if let url = WidgetShared.thumbnailURL(for: score.id),
-           let image = UIImage(contentsOfFile: url.path) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-        } else {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(.quaternary)
-                .overlay(
-                    Image(systemName: "music.note")
-                        .foregroundStyle(.secondary)
-                )
+    private var artwork: some View {
+        switch item.kind {
+        case .score:
+            if let url = WidgetShared.thumbnailURL(for: item.id),
+               let image = UIImage(contentsOfFile: url.path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                iconTile("music.note")
+            }
+        case .folder:
+            iconTile("folder.fill")
+        case .program:
+            iconTile("music.note.list")
         }
+    }
+
+    private func iconTile(_ systemImage: String) -> some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(.quaternary)
+            .overlay(
+                Image(systemName: systemImage)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            )
     }
 }

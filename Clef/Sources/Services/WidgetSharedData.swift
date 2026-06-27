@@ -26,8 +26,8 @@ enum WidgetShared {
     }
 
     /// Deep link a widget item opens in the app (handled in ContentView).
-    static func scoreURL(_ id: UUID) -> URL {
-        URL(string: "clef://score/\(id.uuidString)")!
+    static func deepLink(_ item: WidgetItem) -> URL {
+        URL(string: "clef://\(item.kind.rawValue)/\(item.id.uuidString)")!
     }
 
     static func loadSnapshot() -> WidgetSnapshot? {
@@ -37,18 +37,26 @@ enum WidgetShared {
 }
 
 struct WidgetSnapshot: Codable {
-    var recent: [WidgetScore] = []
+    var recent: [WidgetItem] = []
     var folders: [WidgetFolder] = []
 }
 
-struct WidgetScore: Codable, Identifiable, Hashable {
+/// A folder/program/score entry as shown in a widget.
+struct WidgetItem: Codable, Identifiable, Hashable {
+    enum Kind: String, Codable {
+        case folder
+        case program
+        case score
+    }
+
     var id: UUID
+    var kind: Kind
     var title: String
-    var composer: String?
 }
 
 struct WidgetFolder: Codable, Identifiable, Hashable {
     var id: UUID
     var name: String
-    var scores: [WidgetScore]
+    /// Subfolders, then programs, then scores — the order shown in the widget.
+    var items: [WidgetItem]
 }

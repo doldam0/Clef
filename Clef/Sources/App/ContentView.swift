@@ -163,13 +163,22 @@ struct ContentView: View {
         }
     }
 
-    /// Handles `clef://score/<uuid>` links tapped in a widget.
+    /// Handles `clef://{score|folder|program}/<uuid>` links tapped in a widget.
     private func openDeepLink(_ url: URL) {
-        guard url.host == "score",
-              let id = UUID(uuidString: url.lastPathComponent)
-        else { return }
-        selectedTab = .recent
-        recentPath.append(ScoreNavigation.reader(id))
+        guard let id = UUID(uuidString: url.lastPathComponent) else { return }
+        switch url.host {
+        case "score":
+            selectedTab = .recent
+            recentPath.append(ScoreNavigation.reader(id))
+        case "folder":
+            selectedTab = .browse
+            browsePath.append(FolderNavigation.detail(id))
+        case "program":
+            selectedTab = .browse
+            browsePath.append(ProgramNavigation.detail(id))
+        default:
+            break
+        }
     }
 }
 

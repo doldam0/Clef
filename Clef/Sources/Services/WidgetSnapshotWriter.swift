@@ -2,13 +2,13 @@ import Foundation
 import SwiftData
 import WidgetKit
 
-/// Builds the widget snapshot (recent scores + folders) and thumbnails from the
-/// SwiftData store and writes them into the App Group container, then asks
-/// WidgetKit to refresh.
+/// Builds the widget snapshot (recent scores + folders with their contents) and
+/// thumbnails from the SwiftData store and writes them into the App Group
+/// container, then asks WidgetKit to refresh.
 @MainActor
 enum WidgetSnapshotWriter {
     private static let recentLimit = 12
-    private static let perFolderLimit = 12
+    private static let perFolderLimit = 16
 
     static func update(using context: ModelContext) async {
         guard WidgetShared.containerURL != nil else { return }
@@ -24,21 +24,13 @@ enum WidgetSnapshotWriter {
         )) ?? []
 
         let snapshot = WidgetSnapshot(
-            recent: recentScores.map(Self.widgetScore),
+            recent: recentScores.map { WidgetItem(id: $0.id, kind: .score, title: $0.title) },
             folders: folders.map { folder in
-                let scores = folder.scores
-                    .sorted { $0.updatedAt > $1.updatedAt }
-                    .prefix(perFolderLimit)
-                    .map(Self.widgetScore)
-                return WidgetFolder(id: folder.id, name: folder.name, scores: Array(scores))
+                WidgetFolder(id: folder.id, name: folder.name, items: items(in: folder))
             }
         )
 
-        // Cache thumbnails for every score the widget might show.
-        var seen = Set<UUID>()
-        let scoresNeedingThumbnails = (recentScores + folders.flatMap { Array($0.scores.prefix(perFolderLimit)) })
-            .filter { seen.insert($0.id).inserted }
-        await writeThumbnails(for: scoresNeedingThumbnails)
+        await writeThumbnails(for: scoreIDs(in: snapshot), context: context)
 
         if let data = try? JSONEncoder().encode(snapshot), let url = WidgetShared.snapshotURL {
             try? data.write(to: url, options: .atomic)
@@ -47,18 +39,44 @@ enum WidgetSnapshotWriter {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
-    private static func widgetScore(_ score: Score) -> WidgetScore {
-        WidgetScore(id: score.id, title: score.title, composer: score.composer)
+    /// Subfolders, then programs, then scores — matching the Browse view order.
+    private static func items(in folder: Folder) -> [WidgetItem] {
+        let subfolders = folder.children
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .map { WidgetItem(id: $0.id, kind: .folder, title: $0.name) }
+
+        let programs = folder.programs
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .map { WidgetItem(id: $0.id, kind: .program, title: $0.name) }
+
+        let scores = folder.scores
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .map { WidgetItem(id: $0.id, kind: .score, title: $0.title) }
+
+        return Array((subfolders + programs + scores).prefix(perFolderLimit))
     }
 
-    private static func writeThumbnails(for scores: [Score]) async {
+    private static func scoreIDs(in snapshot: WidgetSnapshot) -> Set<UUID> {
+        var ids = Set<UUID>()
+        for item in snapshot.recent where item.kind == .score { ids.insert(item.id) }
+        for folder in snapshot.folders {
+            for item in folder.items where item.kind == .score { ids.insert(item.id) }
+        }
+        return ids
+    }
+
+    private static func writeThumbnails(for ids: Set<UUID>, context: ModelContext) async {
         guard let dir = WidgetShared.thumbnailsDirectory else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
-        for score in scores {
-            guard let url = WidgetShared.thumbnailURL(for: score.id),
+        for id in ids {
+            guard let url = WidgetShared.thumbnailURL(for: id),
                   !FileManager.default.fileExists(atPath: url.path)
             else { continue }
+
+            var descriptor = FetchDescriptor<Score>(predicate: #Predicate { $0.id == id })
+            descriptor.fetchLimit = 1
+            guard let score = try? context.fetch(descriptor).first else { continue }
 
             if let image = await ThumbnailService.shared.thumbnail(for: score),
                let data = image.jpegData(compressionQuality: 0.7) {
