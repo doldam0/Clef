@@ -73,8 +73,9 @@ private struct ImportDestinationPicker: View {
     }
 }
 
-/// One level of the destination tree: an "import here" action for the current
-/// folder, plus its subfolders that drill deeper when tapped.
+/// One level of the destination tree: its subfolders drill deeper when tapped,
+/// and the "Import" button in the navigation bar imports into the level you're
+/// currently viewing.
 private struct FolderLevelView: View {
     @Query private var allFolders: [Folder]
     let folder: Folder?
@@ -87,15 +88,12 @@ private struct FolderLevelView: View {
 
     var body: some View {
         List {
-            Section {
-                Button {
-                    onSelect(folder)
-                } label: {
-                    Label(importHereLabel, systemImage: "tray.and.arrow.down")
+            if subfolders.isEmpty {
+                Section {
+                    Text("No subfolders. Tap Import to add here.")
+                        .foregroundStyle(.secondary)
                 }
-            }
-
-            if !subfolders.isEmpty {
+            } else {
                 Section("Folders") {
                     ForEach(subfolders) { child in
                         NavigationLink {
@@ -109,12 +107,11 @@ private struct FolderLevelView: View {
                 }
             }
         }
-    }
-
-    private var importHereLabel: LocalizedStringKey {
-        if let folder {
-            return "Import to “\(folder.name)”"
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Import") { onSelect(folder) }
+                    .buttonStyle(.borderedProminent)
+            }
         }
-        return "Import to Library"
     }
 }
