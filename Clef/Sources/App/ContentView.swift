@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \Score.updatedAt, order: .reverse) private var scores: [Score]
     @State private var selectedTab: LibraryTab = .recent
     @State private var searchText = ""
@@ -141,11 +143,33 @@ struct ContentView: View {
         }
         .openInImporter()
         .onOpenURL { url in
-            let files = ImportInbox.read([url])
-            if !files.isEmpty {
-                ImportInbox.shared.add(files)
+            if url.scheme == "clef" {
+                openDeepLink(url)
+            } else {
+                let files = ImportInbox.read([url])
+                if !files.isEmpty {
+                    ImportInbox.shared.add(files)
+                }
             }
         }
+        .task {
+            await WidgetSnapshotWriter.update(using: modelContext)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                let context = modelContext
+                Task { await WidgetSnapshotWriter.update(using: context) }
+            }
+        }
+    }
+
+    /// Handles `clef://score/<uuid>` links tapped in a widget.
+    private func openDeepLink(_ url: URL) {
+        guard url.host == "score",
+              let id = UUID(uuidString: url.lastPathComponent)
+        else { return }
+        selectedTab = .recent
+        recentPath.append(ScoreNavigation.reader(id))
     }
 }
 
