@@ -56,6 +56,7 @@ struct PDFKitView: UIViewRepresentable {
 
         let overlayCoordinator = context.coordinator.overlayCoordinator
         pdfView.pageOverlayViewProvider = overlayCoordinator
+        overlayCoordinator.attachToolHost(to: pdfView)
         pdfView.isInMarkupMode = isDrawingEnabled
 
         if let document = PDFDocument(data: pdfData) {
@@ -205,6 +206,17 @@ struct PDFKitView: UIViewRepresentable {
     }
 }
 
+/// A per-page annotation canvas that never becomes first responder.
+///
+/// The tool picker is anchored to a separate, page-independent host canvas
+/// (see `OverlayCoordinator.toolHost`). If a page canvas were allowed to
+/// become first responder when touched, it would steal the anchor away and
+/// make the palette blink on every page turn. Drawing does not require first
+/// responder status, so refusing it keeps the palette perfectly stable.
+private final class AnnotationCanvasView: PKCanvasView {
+    override var canBecomeFirstResponder: Bool { false }
+}
+
 @MainActor
 final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProvider, PKCanvasViewDelegate, PKToolPickerObserver {
     private var canvasCache: [Int: PKCanvasView] = [:]
@@ -213,7 +225,14 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
     private var preRenderedPages: Set<Int> = []
     private var toolPicker: PKToolPicker!
 
+    /// Invisible, page-independent canvas that owns the tool picker. It stays
+    /// first responder for the whole drawing session so the palette never
+    /// hides while paging. Per-page canvases mirror its selected tool via the
+    /// observer relationship.
+    private let toolHost = PKCanvasView(frame: .zero)
+
     private var isDrawingEnabled: Bool
+    private var hasAssertedHost = false
     private var onDrawingChanged: (Int, PKDrawing) -> Void
     private var drawingForPage: (Int) -> PKDrawing
 
@@ -232,6 +251,18 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
     private func configureToolPicker() {
         toolPicker = PKToolPicker()
         toolPicker.addObserver(self)
+        // Observing keeps `toolHost.tool` in sync with the picker, so new page
+        // canvases can copy the current tool at creation time.
+        toolPicker.addObserver(toolHost)
+    }
+
+    /// Adds the tool-host anchor into the view hierarchy so it can become
+    /// first responder. Must be called once the `PDFView` exists in a window.
+    func attachToolHost(to hostView: UIView) {
+        guard toolHost.superview == nil else { return }
+        // Keep interaction enabled (UIKit refuses first responder otherwise),
+        // but the zero frame means it never receives touches itself.
+        hostView.addSubview(toolHost)
     }
 
     func pdfView(_ view: PDFView, overlayViewFor page: PDFPage) -> UIView? {
@@ -240,16 +271,18 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
 
         if let existing = canvasCache[pageIndex] {
             existing.isUserInteractionEnabled = isDrawingEnabled
-            updateToolPicker(for: existing)
             return existing
         }
 
-        let canvasView = PKCanvasView(frame: .zero)
+        let canvasView = AnnotationCanvasView(frame: .zero)
         canvasView.backgroundColor = .clear
         canvasView.isOpaque = false
         canvasView.drawingPolicy = .pencilOnly
         canvasView.delegate = self
         canvasView.isUserInteractionEnabled = isDrawingEnabled
+        // Mirror the picker's current tool immediately; the observer below keeps
+        // it in sync for subsequent changes.
+        canvasView.tool = toolHost.tool
 
         if let cached = drawingCache[pageIndex] {
             canvasView.drawing = cached
@@ -262,7 +295,6 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         toolPicker.addObserver(canvasView)
         canvasCache[pageIndex] = canvasView
         canvasToPageIndex[ObjectIdentifier(canvasView)] = pageIndex
-        updateToolPicker(for: canvasView)
         return canvasView
     }
 
@@ -284,12 +316,29 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
     }
 
     func setDrawingEnabled(_ enabled: Bool) {
-        guard isDrawingEnabled != enabled else { return }
+        let changed = isDrawingEnabled != enabled
         isDrawingEnabled = enabled
 
-        for canvasView in canvasCache.values {
-            canvasView.isUserInteractionEnabled = enabled
-            updateToolPicker(for: canvasView)
+        if changed {
+            for canvasView in canvasCache.values {
+                canvasView.isUserInteractionEnabled = enabled
+            }
+        }
+
+        // The palette follows the anchor's responder state, which is stable
+        // across page turns — so it stays put instead of blinking. Assert it
+        // once per enable (covers a freshly recreated view that starts enabled)
+        // without re-asserting on every layout pass, so manual palette
+        // dismissal is respected.
+        if enabled {
+            guard changed || !hasAssertedHost else { return }
+            hasAssertedHost = true
+            toolPicker.setVisible(true, forFirstResponder: toolHost)
+            toolHost.becomeFirstResponder()
+        } else if changed {
+            hasAssertedHost = false
+            toolPicker.setVisible(false, forFirstResponder: toolHost)
+            toolHost.resignFirstResponder()
         }
     }
 
@@ -338,6 +387,10 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         for canvasView in canvasCache.values {
             toolPicker.removeObserver(canvasView)
         }
+        toolPicker.setVisible(false, forFirstResponder: toolHost)
+        toolHost.resignFirstResponder()
+        toolPicker.removeObserver(toolHost)
+        toolHost.removeFromSuperview()
         toolPicker.removeObserver(self)
         canvasCache.removeAll()
         canvasToPageIndex.removeAll()
@@ -353,15 +406,6 @@ final class OverlayCoordinator: NSObject, @preconcurrency PDFPageOverlayViewProv
         onDrawingChanged(pageIndex, drawing)
     }
 
-    private func updateToolPicker(for canvasView: PKCanvasView) {
-        if isDrawingEnabled {
-            toolPicker.setVisible(true, forFirstResponder: canvasView)
-            canvasView.becomeFirstResponder()
-        } else {
-            toolPicker.setVisible(false, forFirstResponder: canvasView)
-            canvasView.resignFirstResponder()
-        }
-    }
 }
 
 extension PDFView {
