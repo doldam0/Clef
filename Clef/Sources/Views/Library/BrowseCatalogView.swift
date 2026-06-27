@@ -23,8 +23,6 @@ struct BrowseCatalogView: View {
     @State private var editingScore: Score?
     @State private var deletingScore: Score?
     @State private var showDeleteSelectedAlert = false
-    @State private var newFolderName = ""
-    @State private var newProgramName = ""
     @State private var renamingFolder: Folder?
     @State private var folderRenameText = ""
     @State private var renamingProgram: Program?
@@ -117,16 +115,6 @@ struct BrowseCatalogView: View {
             .sheet(item: $editingScore) { score in
                 ScoreMetadataEditorView(score: score, existingTags: allTags)
             }
-            .alert("New Folder", isPresented: $isCreatingFolder) {
-                TextField("Folder Name", text: $newFolderName)
-                Button("Cancel", role: .cancel) { newFolderName = "" }
-                Button("Create") { createFolder() }
-            }
-            .alert("New Program", isPresented: $isCreatingProgram) {
-                TextField("Program Name", text: $newProgramName)
-                Button("Cancel", role: .cancel) { newProgramName = "" }
-                Button("Create") { createProgram() }
-            }
             .alert("Rename Folder", isPresented: .init(
                 get: { renamingFolder != nil },
                 set: { if !$0 { renamingFolder = nil } }
@@ -143,7 +131,12 @@ struct BrowseCatalogView: View {
                 Button("Cancel", role: .cancel) { renamingProgram = nil }
                 Button("Rename") { commitProgramRename() }
             }
-            .scoreImporter(isPresented: $isImporting, folder: folder)
+            .libraryCreateActions(
+                folder: folder,
+                isImporting: $isImporting,
+                isCreatingFolder: $isCreatingFolder,
+                isCreatingProgram: $isCreatingProgram
+            )
     }
 
     // MARK: - Content
@@ -364,36 +357,6 @@ struct BrowseCatalogView: View {
         modelContext.delete(score)
         try? modelContext.save()
         deletingScore = nil
-    }
-
-    private func createFolder() {
-        let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else {
-            newFolderName = ""
-            return
-        }
-        let newFolder = Folder(name: trimmed)
-        if let folder {
-            newFolder.parent = folder
-        }
-        modelContext.insert(newFolder)
-        try? modelContext.save()
-        newFolderName = ""
-    }
-
-    private func createProgram() {
-        let trimmed = newProgramName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else {
-            newProgramName = ""
-            return
-        }
-        let program = Program(name: trimmed)
-        if let folder {
-            program.folder = folder
-        }
-        modelContext.insert(program)
-        try? modelContext.save()
-        newProgramName = ""
     }
 
     private func beginFolderRename(_ folder: Folder) {

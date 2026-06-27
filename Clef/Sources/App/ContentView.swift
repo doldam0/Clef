@@ -3,7 +3,6 @@ import SwiftData
 
 struct ContentView: View {
     @Query(sort: \Score.updatedAt, order: .reverse) private var scores: [Score]
-    @State private var isImporting = false
     @State private var selectedTab: LibraryTab = .recent
     @State private var searchText = ""
     @State private var recentPath = NavigationPath()
@@ -20,7 +19,6 @@ struct ContentView: View {
                     ScoreLibraryView(
                         tab: .recent,
                         searchText: $searchText,
-                        onImport: { isImporting = true },
                         onScoreTapped: { score in
                             recentPath.append(ScoreNavigation.reader(score.id))
                         },
@@ -83,7 +81,6 @@ struct ContentView: View {
                     ScoreLibraryView(
                         tab: .browse,
                         searchText: $searchText,
-                        onImport: { isImporting = true },
                         onScoreTapped: { score in
                             browsePath.append(ScoreNavigation.reader(score.id))
                         },
@@ -142,7 +139,6 @@ struct ContentView: View {
                 }
             }
         }
-        .scoreImporter(isPresented: $isImporting)
         .openInImporter()
         .onOpenURL { url in
             let files = ImportInbox.read([url])

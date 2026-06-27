@@ -13,7 +13,6 @@ struct ScoreLibraryView: View {
     @Query(sort: \Program.updatedAt, order: .reverse) private var programs: [Program]
     let tab: LibraryTab
     @Binding var searchText: String
-    var onImport: () -> Void
     var onScoreTapped: (Score) -> Void
     var onProgramTapped: (Program) -> Void
     var onFolderTapped: (Folder) -> Void
@@ -66,7 +65,7 @@ struct ScoreLibraryView: View {
                 case .recent:
                     RecentScoresView(
                         onScoreTapped: onScoreTapped,
-                        onImport: onImport,
+                        onImport: { browseIsImporting = true },
                         isSelecting: $isSelecting,
                         selectedScoreIds: $selectedScoreIds,
                         editingScore: $editingScore,
@@ -98,13 +97,7 @@ struct ScoreLibraryView: View {
                 selectableScores: selectableScores,
                 folders: folders,
                 programs: programs,
-                onImport: {
-                    if tab == .browse && !isSearchActive {
-                        browseIsImporting = true
-                    } else {
-                        onImport()
-                    }
-                },
+                onImport: { browseIsImporting = true },
                 onCreateFolder: { browseIsCreatingFolder = true },
                 onCreateProgram: { browseIsCreatingProgram = true },
                 onMoveToFolder: { moveSelectedScores(to: $0) },
@@ -131,7 +124,16 @@ struct ScoreLibraryView: View {
         } message: {
             Text("Delete \(selectedScoreIds.count) scores? This cannot be undone.")
         }
-        .scoreImporter(isPresented: $browseIsImporting)
+        // Host the import / create-folder / create-program responders for the
+        // Recent tab and search results. In the Browse tab the embedded
+        // BrowseCatalogView already hosts them, so disable here to avoid doubles.
+        .libraryCreateActions(
+            enabled: isSearchActive || tab == .recent,
+            folder: nil,
+            isImporting: $browseIsImporting,
+            isCreatingFolder: $browseIsCreatingFolder,
+            isCreatingProgram: $browseIsCreatingProgram
+        )
     }
 
     // MARK: - Content
