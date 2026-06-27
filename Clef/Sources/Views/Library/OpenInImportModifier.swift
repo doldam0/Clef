@@ -48,62 +48,73 @@ extension View {
     }
 }
 
-/// A sheet that lets the user choose which folder received files should go into
-/// (or the top-level library).
+/// A sheet that lets the user drill down through the folder tree and pick where
+/// received files should go (or the top-level library).
 private struct ImportDestinationPicker: View {
-    @Query(sort: \Folder.name) private var folders: [Folder]
     let fileCount: Int
     let onSelect: (Folder?) -> Void
     let onCancel: () -> Void
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Button {
-                        onSelect(nil)
-                    } label: {
-                        Label("Library", systemImage: "house")
+            FolderLevelView(folder: nil, onSelect: onSelect)
+                .navigationTitle(titleKey)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { onCancel() }
                     }
                 }
-
-                if !folders.isEmpty {
-                    Section("Folders") {
-                        ForEach(foldersByPath, id: \.id) { folder in
-                            Button {
-                                onSelect(folder)
-                            } label: {
-                                Label(path(for: folder), systemImage: "folder")
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle(titleKey)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onCancel() }
-                }
-            }
         }
     }
 
     private var titleKey: LocalizedStringKey {
         fileCount == 1 ? "Import 1 file to…" : "Import \(fileCount) files to…"
     }
+}
 
-    private var foldersByPath: [Folder] {
-        folders.sorted { path(for: $0).localizedStandardCompare(path(for: $1)) == .orderedAscending }
+/// One level of the destination tree: an "import here" action for the current
+/// folder, plus its subfolders that drill deeper when tapped.
+private struct FolderLevelView: View {
+    @Query private var allFolders: [Folder]
+    let folder: Folder?
+    let onSelect: (Folder?) -> Void
+
+    private var subfolders: [Folder] {
+        let children = folder?.children ?? allFolders.filter { $0.parent == nil }
+        return children.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    private func path(for folder: Folder) -> String {
-        var parts: [String] = []
-        var current: Folder? = folder
-        while let node = current {
-            parts.insert(node.name, at: 0)
-            current = node.parent
+    var body: some View {
+        List {
+            Section {
+                Button {
+                    onSelect(folder)
+                } label: {
+                    Label(importHereLabel, systemImage: "tray.and.arrow.down")
+                }
+            }
+
+            if !subfolders.isEmpty {
+                Section("Folders") {
+                    ForEach(subfolders) { child in
+                        NavigationLink {
+                            FolderLevelView(folder: child, onSelect: onSelect)
+                                .navigationTitle(child.name)
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            Label(child.name, systemImage: "folder")
+                        }
+                    }
+                }
+            }
         }
-        return parts.joined(separator: " / ")
+    }
+
+    private var importHereLabel: LocalizedStringKey {
+        if let folder {
+            return "Import to “\(folder.name)”"
+        }
+        return "Import to Library"
     }
 }
