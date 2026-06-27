@@ -349,6 +349,12 @@
         }
       }
     },
+    "Import %lld files to…" : {
+
+    },
+    "Import 1 file to…" : {
+
+    },
     "Import PDF sheet music to get started" : {
       "localizations" : {
         "ko" : {

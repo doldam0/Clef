@@ -143,6 +143,13 @@ struct ContentView: View {
             }
         }
         .scoreImporter(isPresented: $isImporting)
+        .openInImporter()
+        .onOpenURL { url in
+            let files = ImportInbox.read([url])
+            if !files.isEmpty {
+                ImportInbox.shared.add(files)
+            }
+        }
     }
 }
 

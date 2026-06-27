@@ -3,10 +3,16 @@ import CoreGraphics
 import PDFKit
 @preconcurrency import Vision
 import NaturalLanguage
+import os
 
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
+
+/// Logs which metadata-extraction path runs. Filter the Xcode console (or
+/// Console.app) by the "MetadataExtractor" category to see whether the custom
+/// LLM adapter was used or extraction fell back to regex.
+private let metadataLog = Logger(subsystem: "Clef", category: "MetadataExtractor")
 
 struct ExtractedMetadata: Sendable {
     var title: String?
@@ -94,6 +100,7 @@ actor MetadataExtractor {
         #endif
 
         // Step 4: Fallback — regex-based extraction
+        metadataLog.notice("Using regex extraction (LLM adapter not used)")
         return extractWithRegex(
             ocrResults: ocrResults,
             pdfTitle: pdfTitle,
@@ -163,8 +170,22 @@ actor MetadataExtractor {
         \(ocrText)
         """
 
+        // Load the adapter that ships in the app bundle directly from its file
+        // URL. The `Adapter(name:)` initializer instead pulls from Background
+        // Assets — it needs a BAAppGroupID and a downloader extension, and traps
+        // at runtime when those aren't configured. Loading the bundled file
+        // needs none of that. If the adapter isn't in the bundle, fall back to
+        // regex-based extraction.
+        guard let adapterURL = Bundle.main.url(
+            forResource: "clef_metadata",
+            withExtension: "fmadapter"
+        ) else {
+            metadataLog.warning("Custom adapter not found in bundle — falling back to regex extraction")
+            return nil
+        }
+
         do {
-            let adapter = try SystemLanguageModel.Adapter(name: "clef_metadata")
+            let adapter = try SystemLanguageModel.Adapter(fileURL: adapterURL)
             let model = SystemLanguageModel(adapter: adapter)
             let session = LanguageModelSession(model: model) {
                 "A conversation between a user and a helpful assistant. You are a sheet music metadata extractor. Given OCR text from the first page of a sheet music PDF, extract the title, composer, and instrument. Respond with a JSON object. Use \"<none>\" if a field cannot be determined."
@@ -190,12 +211,14 @@ actor MetadataExtractor {
                     .filter { !$0.isEmpty }
             }
 
+            metadataLog.info("Extracted metadata via custom LLM adapter")
             return ExtractedMetadata(
                 title: title,
                 composer: composer,
                 instruments: instruments
             )
         } catch {
+            metadataLog.error("Custom adapter unavailable (\(error.localizedDescription, privacy: .public)) — falling back to regex extraction")
             return nil
         }
     }
