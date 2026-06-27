@@ -318,7 +318,16 @@
         }
       }
     },
-    "Folder Not Found": {},
+    "Folder Not Found": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더를 찾을 수 없음"
+          }
+        }
+      }
+    },
     "Folders": {
       "localizations": {
         "ko": {
