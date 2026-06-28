@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # This project targets the iOS 26 SDK, so the runner needs Xcode 26+.
+      # If the build fails on the toolchain, pin a specific Xcode here, e.g.:
+      #   sudo xcode-select -s /Applications/Xcode_26.app
+      - name: Show Xcode
+        run: xcodebuild -version
+
+      # Requires the "Clef" scheme to be marked **Shared** in Xcode
+      # (Product > Scheme > Manage Schemes > check "Shared"), committed under
+      # Clef.xcodeproj/xcshareddata/xcschemes/.
+      - name: Build (no code signing)
+        run: |
+          xcodebuild build \
+            -project Clef.xcodeproj \
+            -scheme Clef \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
