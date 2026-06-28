@@ -327,7 +327,6 @@
 						CreatedOnToolsVersion = 26.6;
 					};
 					E62EC75D399DCEC77D3C2B88 = {
-						DevelopmentTeam = 6882C9XWTW;
 						ProvisioningStyle = Automatic;
 					};
 				};
