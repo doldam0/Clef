@@ -8,14 +8,8 @@ struct ScoreImportModifier: ViewModifier {
     var program: Program?
     var folder: Folder?
     /// Files supplied from outside the file picker (e.g. "Open in Clef"). Setting
-    /// this runs the same import pipeline into `folder`, then clears itself.
+    /// this imports them into `folder`, then clears itself.
     @Binding var externalFiles: [ImportFile]
-
-    @State private var isAnalyzing = false
-    @State private var analysisProgress = (current: 0, total: 0)
-    @State private var metadataQueue: [(score: Score, metadata: ExtractedMetadata)] = []
-    @State private var metadataTotal = 0
-    @State private var showConfirmation = false
 
     func body(content: Content) -> some View {
         content
@@ -31,46 +25,6 @@ struct ScoreImportModifier: ViewModifier {
                 guard !files.isEmpty else { return }
                 externalFiles = []
                 importFiles(files)
-            }
-            .overlay {
-                if isAnalyzing {
-                    ZStack {
-                        Color.black.opacity(0.3)
-                            .ignoresSafeArea()
-                        VStack(spacing: 16) {
-                            ProgressView()
-                                .controlSize(.large)
-                            Text("Analyzing Metadata...")
-                                .font(.headline)
-                            if analysisProgress.total > 1 {
-                                Text("\(analysisProgress.current) / \(analysisProgress.total)")
-                                    .font(.subheadline)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(32)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                    }
-                }
-            }
-            .sheet(isPresented: $showConfirmation) {
-                if let first = metadataQueue.first {
-                    MetadataConfirmationView(
-                        score: first.score,
-                        extracted: first.metadata,
-                        currentIndex: metadataTotal - metadataQueue.count,
-                        totalCount: metadataTotal
-                    ) {
-                        metadataQueue.removeFirst()
-                        if !metadataQueue.isEmpty {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                showConfirmation = true
-                            }
-                        }
-                    }
-                    .id(first.score.id)
-                }
             }
     }
 
@@ -90,10 +44,10 @@ struct ScoreImportModifier: ViewModifier {
         importFiles(files)
     }
 
+    /// Imports each PDF using its file name as the title and leaving the rest of
+    /// the metadata blank for the user to fill in later.
     private func importFiles(_ files: [ImportFile]) {
         guard !files.isEmpty else { return }
-
-        var importedScores: [Score] = []
 
         for file in files {
             let score = Score(title: file.title, pdfData: file.data)
@@ -102,58 +56,12 @@ struct ScoreImportModifier: ViewModifier {
             if let folder {
                 score.folder = folder
             }
-
             if let program {
                 program.appendScore(score)
             }
-
-            importedScores.append(score)
         }
 
         try? modelContext.save()
-
-        guard !importedScores.isEmpty else { return }
-
-        isAnalyzing = true
-        analysisProgress = (current: 0, total: importedScores.count)
-
-        Task {
-            let pdfDataList: [(index: Int, pdfData: Data)] = importedScores.enumerated().map { ($0.offset, $0.element.pdfData) }
-
-            let metadataResults = await withTaskGroup(
-                of: (Int, ExtractedMetadata).self,
-                returning: [ExtractedMetadata].self
-            ) { group in
-                for item in pdfDataList {
-                    let pdfData = item.pdfData
-                    let index = item.index
-                    group.addTask {
-                        let metadata = await MetadataExtractor.shared.extract(from: pdfData)
-                        return (index, metadata)
-                    }
-                }
-
-                var results: [(Int, ExtractedMetadata)] = []
-                for await result in group {
-                    results.append(result)
-                    await MainActor.run {
-                        analysisProgress.current = results.count
-                    }
-                }
-
-                return results.sorted { $0.0 < $1.0 }.map { $0.1 }
-            }
-
-            var queue: [(score: Score, metadata: ExtractedMetadata)] = []
-            for (index, score) in importedScores.enumerated() {
-                queue.append((score: score, metadata: metadataResults[index]))
-            }
-
-            isAnalyzing = false
-            metadataQueue = queue
-            metadataTotal = queue.count
-            showConfirmation = true
-        }
     }
 }
 
