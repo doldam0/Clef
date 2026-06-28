@@ -1,0 +1,724 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 70;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01C4DC37B80539B1F728C2A2 /* ThumbnailSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E3F0F83F07EDF9B54837B4 /* ThumbnailSidebarView.swift */; };
+		01F114D13E6A34D92A6E2B9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D6C7DBC63F3C40D7AAA7AF72 /* Assets.xcassets */; };
+		0400636A4BEA22C4065F9CA6 /* ClefApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0F347991C12F95C43240D2 /* ClefApp.swift */; };
+		043489D89792518F1E5F5982 /* BrowseCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D9FF83B87D9842C9734AFA /* BrowseCatalogView.swift */; };
+		0C9A81880CAAEE2EB7B9890F /* ScoreImportModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6599DA8A678FDEAEF57CE5C0 /* ScoreImportModifier.swift */; };
+		14B1D1A80524352457C0B347 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A975802BFCAB8B5F26C72F /* ContentView.swift */; };
+		2065FC5570C3B2685A190483 /* ProgramItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83193A92D3881E2F81F99B25 /* ProgramItem.swift */; };
+		2F57FFA0175C88DB2C189672 /* LibraryToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0D95189CD9CC3FF24B87DA /* LibraryToolbar.swift */; };
+		36C6E3322FF020C800655117 /* ImportInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3312FF020C800655117 /* ImportInbox.swift */; };
+		36C6E3342FF020D200655117 /* OpenInImportModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3332FF020D200655117 /* OpenInImportModifier.swift */; };
+		36C6E3362FF02B6B00655117 /* LibraryCreateActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3352FF02B6B00655117 /* LibraryCreateActions.swift */; };
+		36C6E33E2FF0322A00655117 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 36C6E33D2FF0322A00655117 /* WidgetKit.framework */; };
+		36C6E3402FF0322A00655117 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 36C6E33F2FF0322A00655117 /* SwiftUI.framework */; };
+		36C6E34F2FF0322B00655117 /* ClefWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 36C6E33B2FF0322A00655117 /* ClefWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		36C6E3582FF033DE00655117 /* WidgetSharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3572FF033DE00655117 /* WidgetSharedData.swift */; };
+		36C6E35A2FF033ED00655117 /* WidgetSnapshotWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3592FF033ED00655117 /* WidgetSnapshotWriter.swift */; };
+		36C6E35B2FF034C600655117 /* WidgetSharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C6E3572FF033DE00655117 /* WidgetSharedData.swift */; };
+		446A4708913096BA3EC20B70 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641817FF7F11CEFAD326887B /* SceneDelegate.swift */; };
+		44DE5D24994E68E439FF864F /* ScoreContextMenuModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A613C0F3495E75200BDF49 /* ScoreContextMenuModifier.swift */; };
+		56B3D4B707830D17CA1C92B7 /* DragSelectModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5DD7A48A12EA1240D1354F /* DragSelectModifier.swift */; };
+		65494BFF1737DE1307011272 /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8D3993333C46BC1F2486C4 /* Score.swift */; };
+		6AE90DFE1DC3C34EAA95B3A1 /* ScoreReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF34FD96E43B12DB4C96BE8 /* ScoreReaderView.swift */; };
+		6DCDBC661C11E6B2BE3D35C0 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE96AF8452C5CA18067B99C3 /* Folder.swift */; };
+		799252E9E56EF951F382B827 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB3A5E59AF344C7B3D1F516 /* ThumbnailService.swift */; };
+		7EB9D8F7CCD6E64F2849001E /* ProgramDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D921B558DA24BEA9DFBA49C /* ProgramDetailView.swift */; };
+		84B463632244A9B7451DA936 /* LibraryCardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7A1DE5EC2BA6DA2EC9C23 /* LibraryCardViews.swift */; };
+		A48ACC7A4D0702428F2D3753 /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4785E0CEF1033F95BEE849 /* PDFKitView.swift */; };
+		AE88B2282B006AABEAD52816 /* ScoreLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C1332C5A0EA3E9C83D02BA /* ScoreLibraryView.swift */; };
+		B39DBB426D9E3CBD4C769912 /* ScorePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F22C0CB6F2CB0E9855FA0E /* ScorePickerView.swift */; };
+		DABB7EA47264901D403AD710 /* PageAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA34C733B135D887932A3E52 /* PageAnnotation.swift */; };
+		E05F079FB825AEF198A0A1BB /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 34E69FAE5D181348E832D3A7 /* Localizable.xcstrings */; };
+		E13C18C5FC49D19C29156841 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC8F3EA7DB3D04EA4FF244B /* Program.swift */; };
+		E65799BF2949338B692D5524 /* RecentScoresView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E6CFED200566722D058C7F3 /* RecentScoresView.swift */; };
+		F77896F114630AEE9ECBBCD0 /* ScoreCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71005645749DF374ED848A0E /* ScoreCardView.swift */; };
+		F913EE7C0EA0E424BBFC821E /* ScoreMetadataEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC028A456E2688F905B28757 /* ScoreMetadataEditorView.swift */; };
+		F98D52846F6CD48D8355BFE9 /* PracticeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C017464F190CF465D846DE /* PracticeStatus.swift */; };
+		FF5F3F28E4A439AC37E68FCC /* ProgramPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD7A643DDBC6D77FCD19FF5 /* ProgramPlayerView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		36C6E34D2FF0322B00655117 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C82B172C2097BD4EAD9241E6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 36C6E33A2FF0322A00655117;
+			remoteInfo = ClefWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		36C6E3542FF0322B00655117 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				36C6E34F2FF0322B00655117 /* ClefWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E6CFED200566722D058C7F3 /* RecentScoresView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentScoresView.swift; sourceTree = "<group>"; };
+		1C4785E0CEF1033F95BEE849 /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
+		2B8D3993333C46BC1F2486C4 /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
+		31D7A1DE5EC2BA6DA2EC9C23 /* LibraryCardViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardViews.swift; sourceTree = "<group>"; };
+		34E69FAE5D181348E832D3A7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		36C6E3312FF020C800655117 /* ImportInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportInbox.swift; sourceTree = "<group>"; };
+		36C6E3332FF020D200655117 /* OpenInImportModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenInImportModifier.swift; sourceTree = "<group>"; };
+		36C6E3352FF02B6B00655117 /* LibraryCreateActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCreateActions.swift; sourceTree = "<group>"; };
+		36C6E33B2FF0322A00655117 /* ClefWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClefWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		36C6E33D2FF0322A00655117 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		36C6E33F2FF0322A00655117 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		36C6E3552FF0326600655117 /* Clef.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Clef.entitlements; path = Clef/Clef.entitlements; sourceTree = "<group>"; };
+		36C6E3562FF0327F00655117 /* ClefWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClefWidgetExtension.entitlements; sourceTree = "<group>"; };
+		36C6E3572FF033DE00655117 /* WidgetSharedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSharedData.swift; sourceTree = "<group>"; };
+		36C6E3592FF033ED00655117 /* WidgetSnapshotWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotWriter.swift; sourceTree = "<group>"; };
+		3B0D95189CD9CC3FF24B87DA /* LibraryToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryToolbar.swift; sourceTree = "<group>"; };
+		51A613C0F3495E75200BDF49 /* ScoreContextMenuModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreContextMenuModifier.swift; sourceTree = "<group>"; };
+		641817FF7F11CEFAD326887B /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		6599DA8A678FDEAEF57CE5C0 /* ScoreImportModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreImportModifier.swift; sourceTree = "<group>"; };
+		71005645749DF374ED848A0E /* ScoreCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreCardView.swift; sourceTree = "<group>"; };
+		77A283B24EDFB8154336BCDA /* Clef.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clef.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D0F347991C12F95C43240D2 /* ClefApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClefApp.swift; sourceTree = "<group>"; };
+		83193A92D3881E2F81F99B25 /* ProgramItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramItem.swift; sourceTree = "<group>"; };
+		85C017464F190CF465D846DE /* PracticeStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeStatus.swift; sourceTree = "<group>"; };
+		8D921B558DA24BEA9DFBA49C /* ProgramDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetailView.swift; sourceTree = "<group>"; };
+		9C5DD7A48A12EA1240D1354F /* DragSelectModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragSelectModifier.swift; sourceTree = "<group>"; };
+		9CD7A643DDBC6D77FCD19FF5 /* ProgramPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramPlayerView.swift; sourceTree = "<group>"; };
+		9DF34FD96E43B12DB4C96BE8 /* ScoreReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreReaderView.swift; sourceTree = "<group>"; };
+		9FB3A5E59AF344C7B3D1F516 /* ThumbnailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailService.swift; sourceTree = "<group>"; };
+		AA34C733B135D887932A3E52 /* PageAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageAnnotation.swift; sourceTree = "<group>"; };
+		BDC8F3EA7DB3D04EA4FF244B /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
+		BE96AF8452C5CA18067B99C3 /* Folder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Folder.swift; sourceTree = "<group>"; };
+		C030A8C09F5C3CE74F2EBD9F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C4F22C0CB6F2CB0E9855FA0E /* ScorePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorePickerView.swift; sourceTree = "<group>"; };
+		D6A975802BFCAB8B5F26C72F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D6C7DBC63F3C40D7AAA7AF72 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D6D9FF83B87D9842C9734AFA /* BrowseCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseCatalogView.swift; sourceTree = "<group>"; };
+		EC028A456E2688F905B28757 /* ScoreMetadataEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreMetadataEditorView.swift; sourceTree = "<group>"; };
+		F0C1332C5A0EA3E9C83D02BA /* ScoreLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreLibraryView.swift; sourceTree = "<group>"; };
+		F8E3F0F83F07EDF9B54837B4 /* ThumbnailSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailSidebarView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		36C6E3502FF0322B00655117 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 36C6E33A2FF0322A00655117 /* ClefWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		36C6E3412FF0322A00655117 /* ClefWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (36C6E3502FF0322B00655117 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ClefWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		36C6E3382FF0322A00655117 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36C6E3402FF0322A00655117 /* SwiftUI.framework in Frameworks */,
+				36C6E33E2FF0322A00655117 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		306239BDE230AB26B827DCDD /* App */ = {
+			isa = PBXGroup;
+			children = (
+				7D0F347991C12F95C43240D2 /* ClefApp.swift */,
+				D6A975802BFCAB8B5F26C72F /* ContentView.swift */,
+				641817FF7F11CEFAD326887B /* SceneDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		36C6E33C2FF0322A00655117 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				36C6E33D2FF0322A00655117 /* WidgetKit.framework */,
+				36C6E33F2FF0322A00655117 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4A992010E6923C2376603B08 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B9619E8F862C886F0A6EC0F5 /* Library */,
+				C6A37F67DE5956B87908D6CC /* Reader */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5A4CE710DC3DF8B2CBF88FCA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				77A283B24EDFB8154336BCDA /* Clef.app */,
+				36C6E33B2FF0322A00655117 /* ClefWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A77252DC13E8796CBC04399D = {
+			isa = PBXGroup;
+			children = (
+				36C6E3562FF0327F00655117 /* ClefWidgetExtension.entitlements */,
+				36C6E3552FF0326600655117 /* Clef.entitlements */,
+				CBCC275E9C3DCAE785CDB4A9 /* Sources */,
+				36C6E3412FF0322A00655117 /* ClefWidget */,
+				36C6E33C2FF0322A00655117 /* Frameworks */,
+				5A4CE710DC3DF8B2CBF88FCA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A926547CDB40DE3581BC6AC9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				BE96AF8452C5CA18067B99C3 /* Folder.swift */,
+				AA34C733B135D887932A3E52 /* PageAnnotation.swift */,
+				85C017464F190CF465D846DE /* PracticeStatus.swift */,
+				BDC8F3EA7DB3D04EA4FF244B /* Program.swift */,
+				83193A92D3881E2F81F99B25 /* ProgramItem.swift */,
+				2B8D3993333C46BC1F2486C4 /* Score.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B9619E8F862C886F0A6EC0F5 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				D6D9FF83B87D9842C9734AFA /* BrowseCatalogView.swift */,
+				9C5DD7A48A12EA1240D1354F /* DragSelectModifier.swift */,
+				31D7A1DE5EC2BA6DA2EC9C23 /* LibraryCardViews.swift */,
+				3B0D95189CD9CC3FF24B87DA /* LibraryToolbar.swift */,
+				8D921B558DA24BEA9DFBA49C /* ProgramDetailView.swift */,
+				0E6CFED200566722D058C7F3 /* RecentScoresView.swift */,
+				71005645749DF374ED848A0E /* ScoreCardView.swift */,
+				51A613C0F3495E75200BDF49 /* ScoreContextMenuModifier.swift */,
+				6599DA8A678FDEAEF57CE5C0 /* ScoreImportModifier.swift */,
+				F0C1332C5A0EA3E9C83D02BA /* ScoreLibraryView.swift */,
+				EC028A456E2688F905B28757 /* ScoreMetadataEditorView.swift */,
+				C4F22C0CB6F2CB0E9855FA0E /* ScorePickerView.swift */,
+				36C6E3332FF020D200655117 /* OpenInImportModifier.swift */,
+				36C6E3352FF02B6B00655117 /* LibraryCreateActions.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		C6A37F67DE5956B87908D6CC /* Reader */ = {
+			isa = PBXGroup;
+			children = (
+				1C4785E0CEF1033F95BEE849 /* PDFKitView.swift */,
+				9CD7A643DDBC6D77FCD19FF5 /* ProgramPlayerView.swift */,
+				9DF34FD96E43B12DB4C96BE8 /* ScoreReaderView.swift */,
+				F8E3F0F83F07EDF9B54837B4 /* ThumbnailSidebarView.swift */,
+			);
+			path = Reader;
+			sourceTree = "<group>";
+		};
+		CA64CDC6BE5CDCFDC6402D6E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D6C7DBC63F3C40D7AAA7AF72 /* Assets.xcassets */,
+				34E69FAE5D181348E832D3A7 /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CBCC275E9C3DCAE785CDB4A9 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				306239BDE230AB26B827DCDD /* App */,
+				A926547CDB40DE3581BC6AC9 /* Models */,
+				CA64CDC6BE5CDCFDC6402D6E /* Resources */,
+				CCF4890605E6A43F11142342 /* Services */,
+				4A992010E6923C2376603B08 /* Views */,
+				C030A8C09F5C3CE74F2EBD9F /* Info.plist */,
+			);
+			name = Sources;
+			path = Clef/Sources;
+			sourceTree = "<group>";
+		};
+		CCF4890605E6A43F11142342 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				9FB3A5E59AF344C7B3D1F516 /* ThumbnailService.swift */,
+				36C6E3312FF020C800655117 /* ImportInbox.swift */,
+				36C6E3572FF033DE00655117 /* WidgetSharedData.swift */,
+				36C6E3592FF033ED00655117 /* WidgetSnapshotWriter.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		36C6E33A2FF0322A00655117 /* ClefWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 36C6E3512FF0322B00655117 /* Build configuration list for PBXNativeTarget "ClefWidgetExtension" */;
+			buildPhases = (
+				36C6E3372FF0322A00655117 /* Sources */,
+				36C6E3382FF0322A00655117 /* Frameworks */,
+				36C6E3392FF0322A00655117 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				36C6E3412FF0322A00655117 /* ClefWidget */,
+			);
+			name = ClefWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = ClefWidgetExtension;
+			productReference = 36C6E33B2FF0322A00655117 /* ClefWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		E62EC75D399DCEC77D3C2B88 /* Clef */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78E7650EC041B9F0DB533C02 /* Build configuration list for PBXNativeTarget "Clef" */;
+			buildPhases = (
+				A251BE6B03BC1A5962AD7E16 /* Sources */,
+				D29F35DF41EFF46C00E30814 /* Resources */,
+				36C6E3542FF0322B00655117 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				36C6E34E2FF0322B00655117 /* PBXTargetDependency */,
+			);
+			name = Clef;
+			packageProductDependencies = (
+			);
+			productName = Clef;
+			productReference = 77A283B24EDFB8154336BCDA /* Clef.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C82B172C2097BD4EAD9241E6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					36C6E33A2FF0322A00655117 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					E62EC75D399DCEC77D3C2B88 = {
+						DevelopmentTeam = 6882C9XWTW;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = BE77680F79B44FE5274CB882 /* Build configuration list for PBXProject "Clef" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ko,
+			);
+			mainGroup = A77252DC13E8796CBC04399D;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E62EC75D399DCEC77D3C2B88 /* Clef */,
+				36C6E33A2FF0322A00655117 /* ClefWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		36C6E3392FF0322A00655117 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D29F35DF41EFF46C00E30814 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01F114D13E6A34D92A6E2B9B /* Assets.xcassets in Resources */,
+				E05F079FB825AEF198A0A1BB /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		36C6E3372FF0322A00655117 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36C6E35B2FF034C600655117 /* WidgetSharedData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A251BE6B03BC1A5962AD7E16 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				043489D89792518F1E5F5982 /* BrowseCatalogView.swift in Sources */,
+				0400636A4BEA22C4065F9CA6 /* ClefApp.swift in Sources */,
+				14B1D1A80524352457C0B347 /* ContentView.swift in Sources */,
+				56B3D4B707830D17CA1C92B7 /* DragSelectModifier.swift in Sources */,
+				6DCDBC661C11E6B2BE3D35C0 /* Folder.swift in Sources */,
+				84B463632244A9B7451DA936 /* LibraryCardViews.swift in Sources */,
+				36C6E35A2FF033ED00655117 /* WidgetSnapshotWriter.swift in Sources */,
+				36C6E3582FF033DE00655117 /* WidgetSharedData.swift in Sources */,
+				2F57FFA0175C88DB2C189672 /* LibraryToolbar.swift in Sources */,
+				36C6E3362FF02B6B00655117 /* LibraryCreateActions.swift in Sources */,
+				A48ACC7A4D0702428F2D3753 /* PDFKitView.swift in Sources */,
+				DABB7EA47264901D403AD710 /* PageAnnotation.swift in Sources */,
+				F98D52846F6CD48D8355BFE9 /* PracticeStatus.swift in Sources */,
+				E13C18C5FC49D19C29156841 /* Program.swift in Sources */,
+				7EB9D8F7CCD6E64F2849001E /* ProgramDetailView.swift in Sources */,
+				2065FC5570C3B2685A190483 /* ProgramItem.swift in Sources */,
+				FF5F3F28E4A439AC37E68FCC /* ProgramPlayerView.swift in Sources */,
+				E65799BF2949338B692D5524 /* RecentScoresView.swift in Sources */,
+				446A4708913096BA3EC20B70 /* SceneDelegate.swift in Sources */,
+				65494BFF1737DE1307011272 /* Score.swift in Sources */,
+				F77896F114630AEE9ECBBCD0 /* ScoreCardView.swift in Sources */,
+				36C6E3342FF020D200655117 /* OpenInImportModifier.swift in Sources */,
+				36C6E3322FF020C800655117 /* ImportInbox.swift in Sources */,
+				44DE5D24994E68E439FF864F /* ScoreContextMenuModifier.swift in Sources */,
+				0C9A81880CAAEE2EB7B9890F /* ScoreImportModifier.swift in Sources */,
+				AE88B2282B006AABEAD52816 /* ScoreLibraryView.swift in Sources */,
+				F913EE7C0EA0E424BBFC821E /* ScoreMetadataEditorView.swift in Sources */,
+				B39DBB426D9E3CBD4C769912 /* ScorePickerView.swift in Sources */,
+				6AE90DFE1DC3C34EAA95B3A1 /* ScoreReaderView.swift in Sources */,
+				799252E9E56EF951F382B827 /* ThumbnailService.swift in Sources */,
+				01C4DC37B80539B1F728C2A2 /* ThumbnailSidebarView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		36C6E34E2FF0322B00655117 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 36C6E33A2FF0322A00655117 /* ClefWidgetExtension */;
+			targetProxy = 36C6E34D2FF0322B00655117 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1651BF3990086166AB2A63E9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		2495F8E4C84AE56C05AEE2DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Clef/Clef.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6882C9XWTW;
+				INFOPLIST_FILE = Clef/Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Clef;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doldam0.Clef;
+				PRODUCT_NAME = Clef;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		36C6E3522FF0322B00655117 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = ClefWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6882C9XWTW;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ClefWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ClefWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doldam0.Clef.ClefWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		36C6E3532FF0322B00655117 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = ClefWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6882C9XWTW;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ClefWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ClefWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doldam0.Clef.ClefWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C60E287E78070882990FCE5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		E2154D125F5E2715E0B25B88 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Clef/Clef.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6882C9XWTW;
+				INFOPLIST_FILE = Clef/Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Clef;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doldam0.Clef;
+				PRODUCT_NAME = Clef;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		36C6E3512FF0322B00655117 /* Build configuration list for PBXNativeTarget "ClefWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36C6E3522FF0322B00655117 /* Debug */,
+				36C6E3532FF0322B00655117 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		78E7650EC041B9F0DB533C02 /* Build configuration list for PBXNativeTarget "Clef" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2495F8E4C84AE56C05AEE2DF /* Debug */,
+				E2154D125F5E2715E0B25B88 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BE77680F79B44FE5274CB882 /* Build configuration list for PBXProject "Clef" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1651BF3990086166AB2A63E9 /* Debug */,
+				C60E287E78070882990FCE5D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C82B172C2097BD4EAD9241E6 /* Project object */;
+}

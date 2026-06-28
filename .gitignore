@@ -63,7 +63,6 @@ fastlane/test_output
 
 # Generated
 build/
-*.xcodeproj
 screenshot_portrait.png
 
 # ML Adapter (large binary, not for git)
